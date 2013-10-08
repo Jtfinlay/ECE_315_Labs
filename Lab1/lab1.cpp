@@ -79,7 +79,6 @@ void UserMain(void * pd) {
 	 */
 	myLCD.Init(LCD_BOTH_SCR);
 	myLCD.PrintString(LCD_UPPER_SCR, Welcome);
-	//myLCD.ModifyScreenFeatures(LCD_BOTH_SCR, CMD_DISPLAY|DISPLAY_ON|DISPLAY_NOCURSOR|DISPLAY_NOBLINK);
 	OSTimeDly(TICKS_PER_SECOND*1);
 
 	/* For exercise 3 and 4 put your semaphore and/or queue initialisations
@@ -120,7 +119,7 @@ void UserMain(void * pd) {
 }
 
 /* Name: StartTask1
- * Description:
+ * Description: Creates Task1 as an OS Task. Task1 runs Task1Main.
  * Inputs: none
  * Outputs: none
  */
@@ -138,7 +137,8 @@ void StartTask1(void) {
 }
 
 /* Name: Task1Main
- * Description:
+ * Description: Main function for Task1. Puts character 'a' on top row of LCD
+ * 		screen. Location is based on DIP switch values
  * Inputs:  void * pd -- pointer to generic data . Currently unused.
  * Outputs: none
  */
@@ -146,7 +146,7 @@ void	Task1Main( void * pd) {
 	/* place semaphore usage code inside the loop */
 	while (1) {
 		if (OSSemPend(&theSemaphore1, 0) == OS_TIMEOUT)
-			iprintf("Timeout waiting for Semaphore 1");
+			iprintf("Timeout waiting for Semaphore 1\n");
 
 		myLCD.Clear(LCD_BOTH_SCR);
 
@@ -162,15 +162,20 @@ void	Task1Main( void * pd) {
 
 		if (getdipsw() == DIP_SWITCH_ON) {
 			if (OSSemPost(&theSemaphore2) == OS_SEM_OVF)
-				iprintf("Error posting to Semaphore 2");
+				iprintf("Error posting to Semaphore 2\n");
 		} else {
 			if (OSSemPost(&theSemaphore4) == OS_SEM_OVF)
-				iprintf("Error posting to Semaphore 4");
+				iprintf("Error posting to Semaphore 4\n");
 		}
 	}
 
 }
 
+/* Name: StartTask2
+ * Description: Creates Task2 as an OS task. Task2 runs Task2Main.
+ * Inputs: none
+ * Outpus: none
+ */
 void StartTask2(void) {
 	BYTE err = OS_NO_ERR;
 
@@ -183,10 +188,17 @@ void StartTask2(void) {
 		iprintf("Task Creation Error in StartTask2\n");
 	}
 }
+
+/* Name: Task2Main
+ * Description: Main function for Task2. Puts character 'b' on second row of LCD
+ * 		screen. Location is based on DIP switch values
+ * Inputs:  void * pd -- pointer to generic data . Currently unused.
+ * Outputs: none
+ */
 void	Task2Main( void * pd) {
 	while (1) {
 		if (OSSemPend(&theSemaphore2, 0) == OS_TIMEOUT)
-			iprintf("Timeout waiting for Semaphore 2");
+			iprintf("Timeout waiting for Semaphore 2\n");
 
 		myLCD.Clear(LCD_BOTH_SCR);
 
@@ -202,13 +214,19 @@ void	Task2Main( void * pd) {
 
 		if (getdipsw() == DIP_SWITCH_ON) {
 			if (OSSemPost(&theSemaphore3) == OS_SEM_OVF)
-				iprintf("Error posting to Semaphore 3");
+				iprintf("Error posting to Semaphore 3\n");
 		} else {
 			if (OSSemPost(&theSemaphore1) == OS_SEM_OVF)
-				iprintf("Error posting to Semaphore 1");
+				iprintf("Error posting to Semaphore 1\n");
 		}
 	}
 }
+
+/* Name: StartTask3
+ * Description: Creates Task3 as an OS task. Task3 runs Task3Main.
+ * Inputs: none
+ * Outpus: none
+ */
 void StartTask3(void) {
 	BYTE err = OS_NO_ERR;
 
@@ -221,10 +239,17 @@ void StartTask3(void) {
 		iprintf("Task Creation Error in StartTask3\n");
 	}
 }
+
+/* Name: Task3Main
+ * Description: Main function for Task3. Puts character 'c' on second row of LCD
+ * 		screen. Location is based on DIP switch values
+ * Inputs:  void * pd -- pointer to generic data . Currently unused.
+ * Outputs: none
+ */
 void	Task3Main( void * pd) {
 	while (1) {
 		if (OSSemPend(&theSemaphore3, 0) == OS_TIMEOUT)
-			iprintf("Timeout waiting for Semaphore 3");
+			iprintf("Timeout waiting for Semaphore 3\n");
 
 		myLCD.Clear(LCD_BOTH_SCR);
 
@@ -240,13 +265,20 @@ void	Task3Main( void * pd) {
 
 		if (getdipsw() == DIP_SWITCH_ON) {
 			if (OSSemPost(&theSemaphore4) == OS_SEM_OVF)
-				iprintf("Error posting to Semaphore 4");
+				iprintf("Error posting to Semaphore 4\n");
 		} else {
 			if (OSSemPost(&theSemaphore2) == OS_SEM_OVF)
-				iprintf("Error posting to Semaphore 2");
+				iprintf("Error posting to Semaphore 2\n");
 		}
 	}
 }
+
+
+/* Name: StartTask4
+ * Description: Creates Task4 as an OS task. Task4 runs Task4Main.
+ * Inputs: none
+ * Outpus: none
+ */
 void StartTask4(void) {
 	BYTE err = OS_NO_ERR;
 
@@ -259,10 +291,17 @@ void StartTask4(void) {
 		iprintf("Task Creation Error in StartTask4\n");
 	}
 }
+
+/* Name: Task4Main
+ * Description: Main function for Task4. Puts character 'd' on second row of LCD
+ * 		screen. Location is based on DIP switch values
+ * Inputs:  void * pd -- pointer to generic data . Currently unused.
+ * Outputs: none
+ */
 void	Task4Main( void * pd) {
 	while (1) {
 		if (OSSemPend(&theSemaphore4, 0) == OS_TIMEOUT)
-			iprintf("Timeour waiting for Semaphore 4");
+			iprintf("Timeour waiting for Semaphore 4\n");
 
 		myLCD.Home(LCD_BOTH_SCR);
 		myLCD.Clear(LCD_BOTH_SCR);
@@ -279,10 +318,10 @@ void	Task4Main( void * pd) {
 
 		if (getdipsw() == DIP_SWITCH_ON) {
 			if (OSSemPost(&theSemaphore1) == OS_SEM_OVF)
-				iprintf("Error posting to Semaphore 1");
+				iprintf("Error posting to Semaphore 1\n");
 		} else {
 			if (OSSemPost(&theSemaphore3) == OS_SEM_OVF)
-				iprintf("Error posting to Semaphore 3");
+				iprintf("Error posting to Semaphore 3\n");
 		}
 	}
 }
