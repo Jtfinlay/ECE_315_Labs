@@ -23,6 +23,14 @@
 #define TASK3_PRIO	MAIN_PRIO + 3
 #define TASK4_PRIO	MAIN_PRIO + 4
 
+/* LCD cursor positions for edge of screen and beginning of second screen. */
+#define LCD_TOP_END		0x27
+#define LCD_BOTTOM_BEGIN 	0x28
+#define LCD_BOTTOM_END 		0x4F
+
+/* DIP Switches defined as on/off */
+#define DIP_SWITCH_ON	0xFF
+
 /* If you create new C subroutines you'll need to add them inside
  * the braces
  */
@@ -141,17 +149,17 @@ void	Task1Main( void * pd) {
 
 		myLCD.Clear(LCD_BOTH_SCR);
 
-		if (getdipsw() == 0xff) {
+		if (getdipsw() == DIP_SWITCH_ON) {
 			myLCD.Home(LCD_BOTH_SCR);
 		} else {
-			myLCD.MoveCursor(LCD_UPPER_SCR, 0x27);
+			myLCD.MoveCursor(LCD_UPPER_SCR, LCD_TOP_END);
 		}
 
 		myLCD.PrintChar(LCD_UPPER_SCR, 'a');
 		OSTimeDly(TICKS_PER_SECOND*.5);
 
 
-		if (getdipsw() == 0xff) {
+		if (getdipsw() == DIP_SWITCH_ON) {
 			OSSemPost(&theSemaphore2);
 		} else {
 			OSSemPost(&theSemaphore4);
@@ -178,17 +186,17 @@ void	Task2Main( void * pd) {
 
 		myLCD.Clear(LCD_BOTH_SCR);
 
-		if (getdipsw() == 0xff) {
-			myLCD.MoveCursor(LCD_BOTH_SCR, 0x28);
+		if (getdipsw() == DIP_SWITCH_ON) {
+			myLCD.MoveCursor(LCD_BOTH_SCR, LCD_BOTTOM_BEGIN);
 		} else {
-			myLCD.MoveCursor(LCD_BOTH_SCR, 0x4F);
+			myLCD.MoveCursor(LCD_BOTH_SCR, LCD_BOTTOM_END);
 		}
 
 
 		myLCD.PrintString(LCD_UPPER_SCR, "b");
 		OSTimeDly(TICKS_PER_SECOND*.5);
 
-		if (getdipsw() == 0xff) {
+		if (getdipsw() == DIP_SWITCH_ON) {
 			OSSemPost(&theSemaphore3);
 		} else {
 			OSSemPost(&theSemaphore1);
@@ -213,17 +221,17 @@ void	Task3Main( void * pd) {
 
 		myLCD.Clear(LCD_BOTH_SCR);
 
-		if (getdipsw() == 0xff) {
+		if (getdipsw() == DIP_SWITCH_ON) {
 			myLCD.Home(LCD_BOTH_SCR);
 		} else {
-			myLCD.MoveCursor(LCD_BOTH_SCR, 0x27);
+			myLCD.MoveCursor(LCD_BOTH_SCR, LCD_TOP_END);
 		}
 
 
 		myLCD.PrintString(LCD_LOWER_SCR, "c");
 		OSTimeDly(TICKS_PER_SECOND*.5);
 
-		if (getdipsw() == 0xff) {
+		if (getdipsw() == DIP_SWITCH_ON) {
 			OSSemPost(&theSemaphore4);
 		} else {
 			OSSemPost(&theSemaphore2);
@@ -249,17 +257,17 @@ void	Task4Main( void * pd) {
 		myLCD.Home(LCD_BOTH_SCR);
 		myLCD.Clear(LCD_BOTH_SCR);
 
-		if (getdipsw() == 0xff) {
-			myLCD.MoveCursor(LCD_BOTH_SCR, 0x28);
+		if (getdipsw() == DIP_SWITCH_ON) {
+			myLCD.MoveCursor(LCD_BOTH_SCR, LCD_BOTTOM_BEGIN);
 		} else {
-			myLCD.MoveCursor(LCD_BOTH_SCR, 0x4F);
+			myLCD.MoveCursor(LCD_BOTH_SCR, LCD_BOTTOM_END);
 		}
 
 
 		myLCD.PrintString(LCD_LOWER_SCR, "d");
 		OSTimeDly(TICKS_PER_SECOND*0.5);
 
-		if (getdipsw() == 0xff) {
+		if (getdipsw() == DIP_SWITCH_ON) {
 			OSSemPost(&theSemaphore1);
 		} else {
 			OSSemPost(&theSemaphore3);
