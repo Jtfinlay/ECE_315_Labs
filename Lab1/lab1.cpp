@@ -145,7 +145,8 @@ void StartTask1(void) {
 void	Task1Main( void * pd) {
 	/* place semaphore usage code inside the loop */
 	while (1) {
-		OSSemPend(&theSemaphore1, 0);
+		if (OSSemPend(&theSemaphore1, 0) == OS_TIMEOUT)
+			iprintf("Timeout waiting for Semaphore 1");
 
 		myLCD.Clear(LCD_BOTH_SCR);
 
@@ -160,9 +161,11 @@ void	Task1Main( void * pd) {
 
 
 		if (getdipsw() == DIP_SWITCH_ON) {
-			OSSemPost(&theSemaphore2);
+			if (OSSemPost(&theSemaphore2) == OS_SEM_OVF)
+				iprintf("Error posting to Semaphore 2");
 		} else {
-			OSSemPost(&theSemaphore4);
+			if (OSSemPost(&theSemaphore4) == OS_SEM_OVF)
+				iprintf("Error posting to Semaphore 4");
 		}
 	}
 
@@ -182,7 +185,8 @@ void StartTask2(void) {
 }
 void	Task2Main( void * pd) {
 	while (1) {
-		OSSemPend(&theSemaphore2, 0);
+		if (OSSemPend(&theSemaphore2, 0) == OS_TIMEOUT)
+			iprintf("Timeout waiting for Semaphore 2");
 
 		myLCD.Clear(LCD_BOTH_SCR);
 
@@ -197,9 +201,11 @@ void	Task2Main( void * pd) {
 		OSTimeDly(TICKS_PER_SECOND*.5);
 
 		if (getdipsw() == DIP_SWITCH_ON) {
-			OSSemPost(&theSemaphore3);
+			if (OSSemPost(&theSemaphore3) == OS_SEM_OVF)
+				iprintf("Error posting to Semaphore 3");
 		} else {
-			OSSemPost(&theSemaphore1);
+			if (OSSemPost(&theSemaphore1) == OS_SEM_OVF)
+				iprintf("Error posting to Semaphore 1");
 		}
 	}
 }
@@ -217,7 +223,8 @@ void StartTask3(void) {
 }
 void	Task3Main( void * pd) {
 	while (1) {
-		OSSemPend(&theSemaphore3, 0);
+		if (OSSemPend(&theSemaphore3, 0) == OS_TIMEOUT)
+			iprintf("Timeout waiting for Semaphore 3");
 
 		myLCD.Clear(LCD_BOTH_SCR);
 
@@ -232,9 +239,11 @@ void	Task3Main( void * pd) {
 		OSTimeDly(TICKS_PER_SECOND*.5);
 
 		if (getdipsw() == DIP_SWITCH_ON) {
-			OSSemPost(&theSemaphore4);
+			if (OSSemPost(&theSemaphore4) == OS_SEM_OVF)
+				iprintf("Error posting to Semaphore 4");
 		} else {
-			OSSemPost(&theSemaphore2);
+			if (OSSemPost(&theSemaphore2) == OS_SEM_OVF)
+				iprintf("Error posting to Semaphore 2");
 		}
 	}
 }
@@ -252,7 +261,8 @@ void StartTask4(void) {
 }
 void	Task4Main( void * pd) {
 	while (1) {
-		OSSemPend(&theSemaphore4, 0);
+		if (OSSemPend(&theSemaphore4, 0) == OS_TIMEOUT)
+			iprintf("Timeour waiting for Semaphore 4");
 
 		myLCD.Home(LCD_BOTH_SCR);
 		myLCD.Clear(LCD_BOTH_SCR);
@@ -268,9 +278,11 @@ void	Task4Main( void * pd) {
 		OSTimeDly(TICKS_PER_SECOND*0.5);
 
 		if (getdipsw() == DIP_SWITCH_ON) {
-			OSSemPost(&theSemaphore1);
+			if (OSSemPost(&theSemaphore1) == OS_SEM_OVF)
+				iprintf("Error posting to Semaphore 1");
 		} else {
-			OSSemPost(&theSemaphore3);
+			if (OSSemPost(&theSemaphore3) == OS_SEM_OVF)
+				iprintf("Error posting to Semaphore 3");
 		}
 	}
 }
