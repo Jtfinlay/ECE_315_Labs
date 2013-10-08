@@ -512,7 +512,6 @@ void Lcd::ShiftDisplayLeft(unsigned char screen){
  * Outputs:
  */
 void Lcd::ModifyScreenFeatures(unsigned char screen, unsigned char feature){
-	send_cmd(screen, feature);
 }
 
 
