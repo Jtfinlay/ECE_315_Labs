@@ -18,6 +18,11 @@
  * Modified for the ECE315 Fall 2013 semester
  * Removed the unused single mode. Removed LCD_ECHO mode. LCD_DEBUG is enough
  *
+ * Modified by:
+ * James Finlay jtfinlay@ualberta.ca
+ * Andrew Fontaine afontaine@ualberta.ca
+ * Modified Init.
+ *
  * */
 
 #include "predef.h"

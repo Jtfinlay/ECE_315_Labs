@@ -3,6 +3,10 @@
  * nancy.minderman@ualberta.ca
  * Solution Code for Lab #1
  * ECE315
+ *
+ * Modified by:
+ * James Finlay jtfinlay@ualberta.ca
+ * Andrew Fontaine afontaine@ualberta.ca
  */
 
 #include "predef.h"
