@@ -18,11 +18,6 @@
  * Modified for the ECE315 Fall 2013 semester
  * Removed the unused single mode. Removed LCD_ECHO mode. LCD_DEBUG is enough
  *
- * Modified by:
- * James Finlay jtfinlay@ualberta.ca
- * Andrew Fontaine afontaine@ualberta.ca
- * Modified Init.
- *
  * */
 
 #include "predef.h"
@@ -313,32 +308,28 @@ void Lcd::Init(unsigned char screen)
 			switch (screen)
 			{
 				case LCD_UPPER_SCR :
-					send_cmd(LCD_UPPER_SCR, CMD_FUNCTION|FUNCTION_8BIT|FUNCTION_2LINE|FUNCTION_5x8); // 56
-					send_cmd(LCD_UPPER_SCR, CMD_CLEAR); // 1 -- CMD_CLEAR
-					send_cmd(LCD_UPPER_SCR, CMD_DISPLAY|DISPLAY_ON|DISPLAY_NOCURSOR|DISPLAY_BLINK); // 12
-
-					send_cmd(LCD_UPPER_SCR, CMD_ENTRY_MODE|ENTRY_CURSOR_INC|ENTRY_NOSHIFT); // 6
-					send_cmd(LCD_UPPER_SCR, CMD_SHIFT|SHIFT_CURSOR|SHIFT_RIGHT); // 20
-					send_cmd(LCD_UPPER_SCR, CMD_HOME); // 2 -- CMD_HOME
-
+					send_cmd(LCD_UPPER_SCR, 56);
+					send_cmd(LCD_UPPER_SCR, 1);
+					send_cmd(LCD_UPPER_SCR, 12);
+					send_cmd(LCD_UPPER_SCR, 6);
+					send_cmd(LCD_UPPER_SCR, 20);
+					send_cmd(LCD_UPPER_SCR, 2);
 					break;
 				case LCD_LOWER_SCR :
-					send_cmd(LCD_LOWER_SCR, CMD_FUNCTION|FUNCTION_8BIT|FUNCTION_2LINE|FUNCTION_5x8);
-					send_cmd(LCD_LOWER_SCR, CMD_CLEAR);
-					send_cmd(LCD_LOWER_SCR, CMD_DISPLAY|DISPLAY_ON|DISPLAY_NOCURSOR|DISPLAY_BLINK);
-
-					send_cmd(LCD_LOWER_SCR, CMD_ENTRY_MODE|ENTRY_CURSOR_INC|ENTRY_NOSHIFT);
-					send_cmd(LCD_LOWER_SCR, CMD_SHIFT|SHIFT_CURSOR|SHIFT_RIGHT);
-					send_cmd(LCD_LOWER_SCR, CMD_HOME);
+					send_cmd(LCD_LOWER_SCR, 56);
+					send_cmd(LCD_LOWER_SCR, 1);
+					send_cmd(LCD_LOWER_SCR, 12);
+					send_cmd(LCD_LOWER_SCR, 6);
+					send_cmd(LCD_LOWER_SCR, 20);
+					send_cmd(LCD_LOWER_SCR, 2);
 					break;
 				case LCD_BOTH_SCR :
-					send_cmd(LCD_BOTH_SCR, CMD_FUNCTION|FUNCTION_8BIT|FUNCTION_2LINE|FUNCTION_5x8);
-					send_cmd(LCD_BOTH_SCR, CMD_CLEAR);
-					send_cmd(LCD_BOTH_SCR, CMD_DISPLAY|DISPLAY_ON|DISPLAY_NOCURSOR|DISPLAY_BLINK);
-
-					send_cmd(LCD_BOTH_SCR, CMD_ENTRY_MODE|ENTRY_CURSOR_INC|ENTRY_NOSHIFT);
-					send_cmd(LCD_BOTH_SCR, CMD_SHIFT|SHIFT_CURSOR|SHIFT_RIGHT);
-					send_cmd(LCD_BOTH_SCR, CMD_HOME);
+					send_cmd(LCD_BOTH_SCR, 56);
+					send_cmd(LCD_BOTH_SCR, 1);
+					send_cmd(LCD_BOTH_SCR, 12);
+					send_cmd(LCD_BOTH_SCR, 6);
+					send_cmd(LCD_BOTH_SCR, 20);
+					send_cmd(LCD_BOTH_SCR, 2);
 					break;
 				default:
 					LCD_DEBUG(iprintf("Lcd::Init incorrect screen\n"));
@@ -517,6 +508,7 @@ void Lcd::ShiftDisplayLeft(unsigned char screen){
  * Outputs:
  */
 void Lcd::ModifyScreenFeatures(unsigned char screen, unsigned char feature){
+
 }
 
 
