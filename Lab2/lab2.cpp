@@ -16,6 +16,7 @@ extern "C" {
 void UserMain(void * pd);
 void IRQIntInit(void);
 void SetIntc(int intc, long func, int vector, int level, int prio);
+
 }
 
 const char * AppName="James and Andrew vs Evil";
@@ -24,6 +25,7 @@ Keypad  myKeypad;
 Lcd		myLCD;
 
 /* Instantiate your Queue objects here */
+OS_Q inputQueue;
 
 
 void UserMain(void * pd) {
@@ -45,6 +47,7 @@ void UserMain(void * pd) {
 
     iprintf("Application started: %s\n", AppName);
 
+    iprintf("Initializing keypad and screen\n");
     myKeypad.Init();
     myLCD.Init(LCD_BOTH_SCR);
     myLCD.PrintString(LCD_UPPER_SCR, "ECE315 Lab #2 Fall 2013");
@@ -52,13 +55,32 @@ void UserMain(void * pd) {
 
 
     /* Initialize your queue and interrupt here */
+    void *start[64];
+    char *msg;
+    iprintf("initializing queue\n");
+    OSQInit(&inputQueue, start, 64);
+
+	iprintf("initializing interrupt\n");
+    IRQIntInit();
+
 
     while (1) {
     	/* Insert your queue usage stuff, parsing and scrolling control here */
     	/* You may also choose to do a quick poll of the Data Avail line
     	 * of the encoder to convince yourself that the keypad encoder works.
     	 */
-    	OSTimeDly(TICKS_PER_SECOND*100);
+
+    	if(myKeypad.ButtonPressed() == TRUE)
+    		iprintf("Button pressed");
+    	else if(myKeypad.ButtonPressed() == FALSE)
+    		iprintf("Button not pressed");
+
+
+    	OSTimeDly(TICKS_PER_SECOND);
+    	msg = (char *) OSQPend(&inputQueue, 0, &err);
+
+    	myLCD.PrintString(LCD_UPPER_SCR, msg);
+
     }
 }
 
@@ -72,6 +94,11 @@ void UserMain(void * pd) {
  * are listed there as well */
 
 INTERRUPT(out_irq_pin_isr, 0x2500){
+
+	OSQPost(&inputQueue,(void *)myKeypad.GetNewButtonString());
+
+	sim.eport.epfr |= 1<<2;
+
 }
 
 /* The registers that you need to initialize to get
@@ -90,11 +117,11 @@ INTERRUPT(out_irq_pin_isr, 0x2500){
  * on how to signal to the processor that it should return to normal processing.
  */
 void IRQIntInit(void) {
-	sim.eport.eppar = 1<<3; //b1000
+	sim.eport.eppar |= 1<<3; //b1000
 	sim.eport.epddr = 0; //b0000
-	sim.eport.epier = 1<<1; //b0010
+	sim.eport.epier |= 1<<1; //b0010
 
-	SetIntc(0, INTERRUPT, 0, 1, 0); // don't think zero is right. We'll try it anyways
+	SetIntc(0, (long) out_irq_pin_isr, 0, 1, 0); // don't think zero is right. We'll try it anyways
 }
 
 
