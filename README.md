@@ -1,18 +1,18 @@
-ECE_315_Labs
+ECE 315 Labs
 ============
 Lab code and docs for ECE 315 at UAlberta. Fall 2013.
 
 Authors
-=======
-James Finlay
+-------
+James Finlay - @jtfinlay
 
-Andrew Fontaine
+Andrew Fontaine - @afontaine
 
 Lab 1
-=====
+-----
 Introduction to uC/OS on an MCF 5234 Microcontroller: Interfacing to a 
 Character LCD.
 
 Lab 2
-=====
+-----
 Introduction to Interrupts and Interfacing for a 16-Button Keypad.
