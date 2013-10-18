@@ -13,9 +13,9 @@
 #include <string.h>
 
 extern "C" {
-void UserMain(void * pd);
-void IRQIntInit(void);
-void SetIntc(int intc, long func, int vector, int level, int prio);
+	void UserMain(void * pd);
+	void IRQIntInit(void);
+	void SetIntc(int intc, long func, int vector, int level, int prio);
 
 }
 
@@ -31,57 +31,82 @@ OS_Q inputQueue;
 void UserMain(void * pd) {
 	BYTE err = OS_NO_ERR;
 
-    InitializeStack();
-    OSChangePrio(MAIN_PRIO);
-    EnableAutoUpdate();
-    StartHTTP();
-    EnableTaskMonitor();
+	InitializeStack();
+	OSChangePrio(MAIN_PRIO);
+	EnableAutoUpdate();
+	StartHTTP();
+	EnableTaskMonitor();
 
-    #ifndef _DEBUG
-    EnableSmartTraps();
-    #endif
+#ifndef _DEBUG
+	EnableSmartTraps();
+#endif
 
-    #ifdef _DEBUG
-    InitializeNetworkGDB_and_Wait();
-    #endif
+#ifdef _DEBUG
+	InitializeNetworkGDB_and_Wait();
+#endif
 
-    iprintf("Application started: %s\n", AppName);
+	iprintf("Application started: %s\n", AppName);
 
-    iprintf("Initializing keypad and screen\n");
-    myKeypad.Init();
-    myLCD.Init(LCD_BOTH_SCR);
-    myLCD.PrintString(LCD_UPPER_SCR, "ECE315 Lab #2 Fall 2013");
-    OSTimeDly(TICKS_PER_SECOND*1);
+	iprintf("Initializing keypad and screen\n");
+	myKeypad.Init();
+	myLCD.Init(LCD_BOTH_SCR);
+	myLCD.PrintString(LCD_UPPER_SCR, "ECE315 Lab #2 Fall 2013");
+	OSTimeDly(TICKS_PER_SECOND*1);
+
+	int i = 3;
 
 
-    /* Initialize your queue and interrupt here */
-    void *start[64];
-    char *msg;
-    iprintf("initializing queue\n");
-    OSQInit(&inputQueue, start, 64);
+	/* Initialize your queue and interrupt here */
+	void *start[64];
+	char *msg;
+	iprintf("initializing queue\n");
+	OSQInit(&inputQueue, start, 64);
 
 	iprintf("initializing interrupt\n");
-    IRQIntInit();
+	IRQIntInit();
+
+	myLCD.Clear(LCD_BOTH_SCR);
 
 
-    while (1) {
-    	/* Insert your queue usage stuff, parsing and scrolling control here */
-    	/* You may also choose to do a quick poll of the Data Avail line
-    	 * of the encoder to convince yourself that the keypad encoder works.
-    	 */
+	while (1) {
+		/* Insert your queue usage stuff, parsing and scrolling control here */
+		/* You may also choose to do a quick poll of the Data Avail line
+		 * of the encoder to convince yourself that the keypad encoder works.
+		 */
 
-    	if(myKeypad.ButtonPressed() == TRUE)
-    		iprintf("Button pressed");
-    	else if(myKeypad.ButtonPressed() == FALSE)
-    		iprintf("Button not pressed");
+		if(myKeypad.ButtonPressed() == TRUE)
+			iprintf("Button pressed\n");
+		else if(myKeypad.ButtonPressed() == FALSE)
+			iprintf("Button not pressed\n");
 
+		iprintf("Waiting for interrupt\n");
+		OSTimeDly(TICKS_PER_SECOND*0.25);
+		msg = (char *) OSQPend(&inputQueue, 0, &err);
 
-    	OSTimeDly(TICKS_PER_SECOND);
-    	msg = (char *) OSQPend(&inputQueue, 0, &err);
+		switch(i) {
+		case 0:
+			i++;
+			myLCD.MoveCursor(LCD_UPPER_SCR, 0x28);
+			myLCD.PrintString(LCD_UPPER_SCR, msg);
+			break;
+		case 1:
+			i++;
+			myLCD.Home(LCD_LOWER_SCR);
+			myLCD.PrintString(LCD_LOWER_SCR, msg);
+			break;
+		case 2:
+			i++;
+			myLCD.MoveCursor(LCD_LOWER_SCR, 0x28);
+			myLCD.PrintString(LCD_LOWER_SCR, msg);
+			break;
+		case 3:
+			i = 0;
+			myLCD.Home(LCD_UPPER_SCR);
+			myLCD.PrintString(LCD_UPPER_SCR, msg);
+			break;
+		}
 
-    	myLCD.PrintString(LCD_UPPER_SCR, msg);
-
-    }
+	}
 }
 
 /* The INTERRUPT MACRO handles the house keeping for the vector table
@@ -95,9 +120,9 @@ void UserMain(void * pd) {
 
 INTERRUPT(out_irq_pin_isr, 0x2500){
 
-	OSQPost(&inputQueue,(void *)myKeypad.GetNewButtonString());
+	sim.eport.epfr = 0x2;
 
-	sim.eport.epfr |= 1<<2;
+	OSQPost(&inputQueue,(void *)myKeypad.GetNewButtonString());
 
 }
 
@@ -117,11 +142,11 @@ INTERRUPT(out_irq_pin_isr, 0x2500){
  * on how to signal to the processor that it should return to normal processing.
  */
 void IRQIntInit(void) {
-	sim.eport.eppar |= 1<<3; //b1000
+	sim.eport.eppar |= 0x8; //b1000
 	sim.eport.epddr = 0; //b0000
-	sim.eport.epier |= 1<<1; //b0010
+	sim.eport.epier |= 0x2; //b0010
 
-	SetIntc(0, (long) out_irq_pin_isr, 0, 1, 0); // don't think zero is right. We'll try it anyways
+	SetIntc(0, (long) out_irq_pin_isr, 1, 1, 1); // don't think zero is right. We'll try it anyways
 }
 
 
