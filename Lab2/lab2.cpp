@@ -12,6 +12,8 @@
 #include "lcd.h"
 #include <string.h>
 
+#define SECOND_LINE_START 0x28
+
 extern "C" {
 	void UserMain(void * pd);
 	void IRQIntInit(void);
@@ -95,7 +97,7 @@ void UserMain(void * pd) {
 		switch(i) {
 		case 0:
 			i++;
-			myLCD.MoveCursor(LCD_UPPER_SCR, 0x28);
+			myLCD.MoveCursor(LCD_UPPER_SCR, SECOND_LINE_START);
 			myLCD.PrintString(LCD_UPPER_SCR, msg);
 			break;
 		case 1:
@@ -105,7 +107,7 @@ void UserMain(void * pd) {
 			break;
 		case 2:
 			i++;
-			myLCD.MoveCursor(LCD_LOWER_SCR, 0x28);
+			myLCD.MoveCursor(LCD_LOWER_SCR, SECOND_LINE_START);
 			myLCD.PrintString(LCD_LOWER_SCR, msg);
 			break;
 		case 3:
