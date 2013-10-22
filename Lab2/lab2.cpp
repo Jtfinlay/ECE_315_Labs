@@ -96,8 +96,8 @@ void UserMain(void * pd) {
 
 		iprintf("Waiting for interrupt\n");
 		OSTimeDly(TICKS_PER_SECOND*0.25);
-		button = (struct KeypadButtonTuple) OSQPend(&inputQueue, 0, &err);
-		snprintf(msg, 15, "Button:%i->%s", button.Number, button.Text);
+		button = (struct KeypadButtonTuple*) OSQPend(&inputQueue, 0, &err);
+		snprintf(msg, 15, "Button:%i->%s", button->Number, button->Text);
 
 		switch(i) {
 		case 0:
