@@ -22,7 +22,7 @@ extern "C" {
 const char * AppName="James and Andrew vs Evil";
 
 struct KeypadButtonTuple {
-	char * Text;
+	const char * Text;
 	unsigned char Number;
 }
 
@@ -65,10 +65,10 @@ void UserMain(void * pd) {
 
 	/* Initialize your queue and interrupt here */
 	void *start[64];
-	char *msg;
-	char msg1[20];
+	struct KeypadButtonTuple *button;
+	char *msg
 	iprintf("initializing queue\n");
-	OSQInit(&inputQueue, start, 64);
+	OSQInit(&inputQueue, start, 10*sizeof(struct KeypadButtonTuple));
 
 	iprintf("initializing interrupt\n");
 	IRQIntInit();
@@ -89,34 +89,30 @@ void UserMain(void * pd) {
 
 		iprintf("Waiting for interrupt\n");
 		OSTimeDly(TICKS_PER_SECOND*0.25);
-		msg = (char *) OSQPend(&inputQueue, 0, &err);
-		snprintf(msg1, 15, "Button:%i->%s", myKeypad.GetLastButtonNumber(), myKeypad.GetLastButtonString());
+		button = (struct KeypadButtonTuple) OSQPend(&inputQueue, 0, &err);
+		snprintf(msg, 15, "Button:%i->%s", button.Number, button.Text);
 
 		switch(i) {
 		case 0:
 			i++;
 			myLCD.MoveCursor(LCD_UPPER_SCR, 0x28);
-			myLCD.PrintString(LCD_UPPER_SCR, msg1);
-			//myLCD.PrintString(LCD_UPPER_SCR, msg);
+			myLCD.PrintString(LCD_UPPER_SCR, msg);
 			break;
 		case 1:
 			i++;
 			myLCD.Home(LCD_LOWER_SCR);
-			myLCD.PrintString(LCD_LOWER_SCR, msg1);
-			//myLCD.PrintString(LCD_LOWER_SCR, msg);
+			myLCD.PrintString(LCD_LOWER_SCR, msg);
 			break;
 		case 2:
 			i++;
 			myLCD.MoveCursor(LCD_LOWER_SCR, 0x28);
-			myLCD.PrintString(LCD_LOWER_SCR, msg1);
-			//myLCD.PrintString(LCD_LOWER_SCR, msg);
+			myLCD.PrintString(LCD_LOWER_SCR, msg);
 			break;
 		case 3:
 			i = 0;
 			myLCD.Clear(LCD_BOTH_SCR);
 			myLCD.Home(LCD_UPPER_SCR);
-			myLCD.PrintString(LCD_UPPER_SCR, msg1);
-			//myLCD.PrintString(LCD_UPPER_SCR, msg);
+			myLCD.PrintString(LCD_UPPER_SCR, msg);
 			break;
 		}
 
@@ -136,10 +132,11 @@ INTERRUPT(out_irq_pin_isr, 0x2500){
 
 	sim.eport.epfr = 0x2;
 
-	struct KeypadButtonTuple press.Number = myKeypad.GetNewButtonNumber();
+	struct KeypadButtonTuple press;
+	press.Number = myKeypad.GetNewButtonNumber();
 	press.Text = myKeypad.GetLastButtonString();
 
-	OSQPost(&inputQueue,(void *)press);
+	OSQPost(&inputQueue,(void *)&press);
 
 }
 
