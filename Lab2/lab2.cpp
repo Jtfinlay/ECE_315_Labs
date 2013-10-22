@@ -158,8 +158,8 @@ INTERRUPT(out_irq_pin_isr, 0x2500){
  * on how to signal to the processor that it should return to normal processing.
  */
 void IRQIntInit(void) {
-	sim.eport.eppar |= 0x8; //b1000
-	sim.eport.epddr = 0; //b0000
+	sim.eport.eppar |= 0x4; //b0100
+	sim.eport.epddr &= 0xFFF0; //b0000
 	sim.eport.epier |= 0x2; //b0010
 
 	SetIntc(0, (long) out_irq_pin_isr, 1, 1, 1);
