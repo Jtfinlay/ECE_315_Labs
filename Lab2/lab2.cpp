@@ -14,6 +14,11 @@
 
 #define SECOND_LINE_START 0x28
 
+#define EPPAR_RISING_EDGE 0x4
+#define EPDDR_INPUT 0xFFF0
+#define EPIER_ENABLE 0x2
+#define EPFR_RESET 0X2
+
 extern "C" {
 	void UserMain(void * pd);
 	void IRQIntInit(void);
@@ -132,7 +137,7 @@ void UserMain(void * pd) {
 
 INTERRUPT(out_irq_pin_isr, 0x2500){
 
-	sim.eport.epfr = 0x2;
+	sim.eport.epfr |= EPFR_RESET;
 
 	struct KeypadButtonTuple press;
 	press.Number = myKeypad.GetNewButtonNumber();
@@ -158,9 +163,9 @@ INTERRUPT(out_irq_pin_isr, 0x2500){
  * on how to signal to the processor that it should return to normal processing.
  */
 void IRQIntInit(void) {
-	sim.eport.eppar |= 0x4; //b0100
-	sim.eport.epddr &= 0xFFF0; //b0000
-	sim.eport.epier |= 0x2; //b0010
+	sim.eport.eppar |= EPPAR_RISING_EDGE; //b0100
+	sim.eport.epddr &= EPDDR_INPUT; //b0000
+	sim.eport.epier |= EPIER_ENABLE; //b0010
 
 	SetIntc(0, (long) out_irq_pin_isr, 1, 1, 1);
 }
