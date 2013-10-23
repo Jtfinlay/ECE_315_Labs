@@ -12,6 +12,13 @@
 #include "lcd.h"
 #include <string.h>
 
+#define SECOND_LINE_START 0x28
+
+#define EPPAR_RISING_EDGE 0x4
+#define EPDDR_INPUT 0xFFF0
+#define EPIER_ENABLE 0x2
+#define EPFR_RESET 0X2
+
 extern "C" {
 	void UserMain(void * pd);
 	void IRQIntInit(void);
@@ -20,6 +27,13 @@ extern "C" {
 }
 
 const char * AppName="James and Andrew vs Evil";
+
+struct KeypadButtonTuple {
+	const char * Text;
+	unsigned char Number;
+}
+
+
 
 Keypad  myKeypad;
 Lcd		myLCD;
@@ -58,9 +72,10 @@ void UserMain(void * pd) {
 
 	/* Initialize your queue and interrupt here */
 	void *start[64];
-	char *msg;
+	struct KeypadButtonTuple *button;
+	char *msg
 	iprintf("initializing queue\n");
-	OSQInit(&inputQueue, start, 64);
+	OSQInit(&inputQueue, start, 10*sizeof(struct KeypadButtonTuple));
 
 	iprintf("initializing interrupt\n");
 	IRQIntInit();
@@ -81,12 +96,13 @@ void UserMain(void * pd) {
 
 		iprintf("Waiting for interrupt\n");
 		OSTimeDly(TICKS_PER_SECOND*0.25);
-		msg = (char *) OSQPend(&inputQueue, 0, &err);
+		button = (struct KeypadButtonTuple*) OSQPend(&inputQueue, 0, &err);
+		snprintf(msg, 15, "Button:%i->%s", button->Number, button->Text);
 
 		switch(i) {
 		case 0:
 			i++;
-			myLCD.MoveCursor(LCD_UPPER_SCR, 0x28);
+			myLCD.MoveCursor(LCD_UPPER_SCR, SECOND_LINE_START);
 			myLCD.PrintString(LCD_UPPER_SCR, msg);
 			break;
 		case 1:
@@ -96,11 +112,12 @@ void UserMain(void * pd) {
 			break;
 		case 2:
 			i++;
-			myLCD.MoveCursor(LCD_LOWER_SCR, 0x28);
+			myLCD.MoveCursor(LCD_LOWER_SCR, SECOND_LINE_START);
 			myLCD.PrintString(LCD_LOWER_SCR, msg);
 			break;
 		case 3:
 			i = 0;
+			myLCD.Clear(LCD_BOTH_SCR);
 			myLCD.Home(LCD_UPPER_SCR);
 			myLCD.PrintString(LCD_UPPER_SCR, msg);
 			break;
@@ -120,9 +137,13 @@ void UserMain(void * pd) {
 
 INTERRUPT(out_irq_pin_isr, 0x2500){
 
-	sim.eport.epfr = 0x2;
+	sim.eport.epfr |= EPFR_RESET;
 
-	OSQPost(&inputQueue,(void *)myKeypad.GetNewButtonString());
+	struct KeypadButtonTuple press;
+	press.Number = myKeypad.GetNewButtonNumber();
+	press.Text = myKeypad.GetLastButtonString();
+
+	OSQPost(&inputQueue,(void *)&press);
 
 }
 
@@ -142,11 +163,11 @@ INTERRUPT(out_irq_pin_isr, 0x2500){
  * on how to signal to the processor that it should return to normal processing.
  */
 void IRQIntInit(void) {
-	sim.eport.eppar |= 0x8; //b1000
-	sim.eport.epddr = 0; //b0000
-	sim.eport.epier |= 0x2; //b0010
+	sim.eport.eppar |= EPPAR_RISING_EDGE; //b0100
+	sim.eport.epddr &= EPDDR_INPUT; //b0000
+	sim.eport.epier |= EPIER_ENABLE; //b0010
 
-	SetIntc(0, (long) out_irq_pin_isr, 1, 1, 1); // don't think zero is right. We'll try it anyways
+	SetIntc(0, (long) out_irq_pin_isr, 1, 1, 1);
 }
 
 
