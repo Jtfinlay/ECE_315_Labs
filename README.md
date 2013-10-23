@@ -16,3 +16,8 @@ Character LCD.
 Lab 2
 -----
 Introduction to Interrupts and Interfacing for a 16-Button Keypad.
+
+Lab 3
+=====
+Introduction to the Fast Ethernet Controller (FEC) of the MCF5234 
+Microcontroller.
