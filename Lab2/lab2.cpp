@@ -71,13 +71,14 @@ void UserMain(void * pd) {
 
 
 	/* Initialize your queue and interrupt here */
-	void *start[64];
-	struct KeypadButtonTuple *button;
-	char *msg
-	iprintf("initializing queue\n");
-	OSQInit(&inputQueue, start, 10*sizeof(struct KeypadButtonTuple));
+	struct KeypadButtonTuple *button; // Button struct for queue
+	char *msg // String for printing
+	err = OSQInit(&inputQueue, start, 10*sizeof(struct KeypadButtonTuple)); // Initialize queue
+	if(err != OS_NO_ERR) {
+		iprintf("Error initializing queue");
+		exit(0);
+	}
 
-	iprintf("initializing interrupt\n");
 	IRQIntInit();
 
 	myLCD.Clear(LCD_BOTH_SCR);
@@ -89,16 +90,15 @@ void UserMain(void * pd) {
 		 * of the encoder to convince yourself that the keypad encoder works.
 		 */
 
-		if(myKeypad.ButtonPressed() == TRUE)
-			iprintf("Button pressed\n");
-		else if(myKeypad.ButtonPressed() == FALSE)
-			iprintf("Button not pressed\n");
-
-		iprintf("Waiting for interrupt\n");
 		OSTimeDly(TICKS_PER_SECOND*0.25);
+		
+		// Grab new button press from queue and create string to be printed
 		button = (struct KeypadButtonTuple*) OSQPend(&inputQueue, 0, &err);
 		snprintf(msg, 15, "Button:%i->%s", button->Number, button->Text);
 
+		/* Print string.
+		 * i is based on which line of the LCD screen we are currently on
+		 */
 		switch(i) {
 		case 0:
 			i++;
@@ -116,6 +116,7 @@ void UserMain(void * pd) {
 			myLCD.PrintString(LCD_LOWER_SCR, msg);
 			break;
 		case 3:
+		// At bottom of Screen, resetting i and clearing screen to move to top.
 			i = 0;
 			myLCD.Clear(LCD_BOTH_SCR);
 			myLCD.Home(LCD_UPPER_SCR);
