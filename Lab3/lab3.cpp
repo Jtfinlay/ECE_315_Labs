@@ -91,9 +91,24 @@ void UserMain(void * pd) {
     QueryIntsFEC();
     OSTimeDly(TICKS_PER_SECOND*5);
 
+
     while (1) {
 
-    OSTimeDly(TICKS_PER_SECOND*100);
+    OSTimeDly(TICKS_PER_SECOND*1);
 
+		if (getdipsw() == 0xFF)
+			sim.fec.tcr |= 1<<0;
+		else {
+			sim.fec.tcr &= 0xFFFFFFFE;
+			putleds(0x00);
+		}
+		iprintf("Total Transmitted Packets: %d\n",
+				sim.fec_rmon_t.packets);
+		iprintf("Total Transmitted Broadcast Packets: %d\n",
+				sim.fec_rmon_t.bc_pkt);
+		iprintf("Total Transmitted Multicast Packets: %d\n",
+				sim.fec_rmon_t.mc_pkt);
+		iprintf("Total transmitted Unicast Packets: %d\n",
+				sim.fec_rmon_t.packets - sim.fec_rmon_t.bc_pkt - sim.fec_rmon_t.mc_pkt);
 	}
 }
