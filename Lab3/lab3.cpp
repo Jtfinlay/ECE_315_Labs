@@ -33,6 +33,11 @@
 
 #define	WAIT_FOREVER 0
 
+#define DIP_ON 0xFF
+#define TCR_OFF 0xFFFFFFFE
+#define LED_OFF 0x00
+#define TCR_ON 0x1
+
 extern "C" {
 	void UserMain(void * pd);
 }
@@ -93,14 +98,14 @@ void UserMain(void * pd) {
 
 
     while (1) {
-
+ 
     OSTimeDly(TICKS_PER_SECOND*1);
 
-		if (getdipsw() == 0xFF)
-			sim.fec.tcr |= 1<<0;
+		if (getdipsw() == DIP_ON)
+			sim.fec.tcr |= TCR_ON;
 		else {
-			sim.fec.tcr &= 0xFFFFFFFE;
-			putleds(0x00);
+			sim.fec.tcr &= TCR_OFF;
+			putleds(LED_OFF);
 		}
 		iprintf("Total Transmitted Packets: %d\n",
 				sim.fec_rmon_t.packets);

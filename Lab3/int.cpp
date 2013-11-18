@@ -14,6 +14,9 @@
 #include "lcd.h"
 
 #define WAIT_FOREVER			0
+#define LED_ON 0xFF
+#define EIR_OFF 0x8000000
+#define EIMR_ON 0x8000000
 
 
 extern "C" {
@@ -27,8 +30,8 @@ extern Lcd myLCD;
 // at the end of the interrupt
 INTERRUPT(gra_isr, 0x2400) /* IRQ 4 Mask */
 {
-	sim.fec.eir |= 1<<28; // reset GRA
-	putleds(0xFF);
+	sim.fec.eir |= EIR_OFF; // reset GRA
+	putleds(LED_ON);
 }
 
 // Place your Interrupt querying code here for exercise 2
@@ -56,22 +59,6 @@ void QueryIntsFEC(void){
 	sprintf(output, "%sHBERR:%d", output, sim.fec.eimr>>31 & 1);
 	myLCD.PrintString(LCD_LOWER_SCR, output);
 
-
-
-/*	iprintf("--------Sim.fec.eimr--------\n");
-	iprintf("UN:%d\n", sim.fec.eimr>>19 & 1);
-	iprintf("RL:%d\n", sim.fec.eimr>>20 & 1);
-	iprintf("LC:%d\n", sim.fec.eimr>>21 & 1);
-	iprintf("EBERR:%d\n", sim.fec.eimr>>22 & 1);
-	iprintf("MII:%d\n", sim.fec.eimr>>23 & 1);
-	iprintf("RXB:%d\n", sim.fec.eimr>>24 & 1);
-	iprintf("RXF:%d\n", sim.fec.eimr>>25 & 1);
-	iprintf("TXB:%d\n", sim.fec.eimr>>26 & 1);
-	iprintf("TXF:%d\n", sim.fec.eimr>>27 & 1);
-	iprintf("GRA:%d\n", sim.fec.eimr>>28 & 1);
-	iprintf("BABT:%d\n", sim.fec.eimr>>29 & 1);
-	iprintf("BABR:%d\n", sim.fec.eimr>>30 & 1);
-	iprintf("HBERR:%d\n", sim.fec.eimr>>31 & 1);*/
 }
 
 // Initialize the FEC interrupt mask register and interrupt controller
@@ -80,8 +67,7 @@ void QueryIntsFEC(void){
 // use level = 1 and prio = 1
 
 void InitializeIntsFEC(void){
-	//putleds(0xff);
-	sim.fec.eimr |= 1<<28; // set GRA
+	sim.fec.eimr |= EIMR_ON; // set GRA
 
 	SetIntc(0, (long) gra_isr, 32, 1, 1);
 }
