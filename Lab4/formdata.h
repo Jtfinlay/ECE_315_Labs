@@ -21,14 +21,18 @@ enum dir { 	UNSET = 0,
 		STOP = 3
 };
 
+char* strtrim(char * str);
+
 
 class FormData {
 public:
 	FormData();
 	virtual ~FormData();
 	BYTE SetMaxRPM(char * rpm);
+	BYTE SetMaxRPM(int iRPM);
 	int  GetMaxRPM(void);
 	BYTE SetMinRPM(char * rpm);
+	BYTE SetMinRPM(int iRPM);
 	int  GetMinRPM(void);
 	BYTE SetSteps(char * st);
 	int  GetSteps (void);
@@ -37,14 +41,23 @@ public:
 	BYTE SetDirection(char * dir);
 	BYTE GetDirection(void);
 	BYTE GetMode(void);
+	BYTE GetErrorMaxRPM();
+	void SetErrorMaxRPM(BYTE error);
+	BYTE GetErrorMinRPM();
+	void SetErrorMinRPM(BYTE error);
+	BYTE GetErrorRotations();
+	void SetErrorRotations(BYTE error);
 	BYTE Init(BYTE motor_mode);
 private:
 	int  int_maxrpm;
 	int  int_minrpm;
 	int  int_steps;
 	int	 int_rotations;
-	BYTE direction;
+	enum dir direction;
 	BYTE mode;
+	BYTE error_maxrpm;
+	BYTE error_minrpm;
+	BYTE error_rotations;
 };
 
 #endif /* FORMDATA_H_ */

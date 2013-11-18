@@ -39,19 +39,22 @@
 #include <sim5234.h>
 #include <cfinter.h>
 #include "motorconstants.h"
+#include <stdlib.h>
 
 const char *AppName = "James and Andrew";
 
+
 extern "C"
 {
-   void UserMain( void *pd );
-   void IRQIntInit(void);
-   void SetIntc(int intc, long func, int vector, int level, int prio);
-   void DisplayLameCounter( int sock, PCSTR url );
-   void DisplayMaxRPM(int sock, PCSTR url);
-   void DisplayMinRPM(int sock, PCSTR url);
-   void DisplayRotations(int sock, PCSTR url);
-   void DisplayDirection(int sock, PCSTR url);
+	void UserMain( void *pd );
+	void IRQIntInit(void);
+	void SetIntc(int intc, long func, int vector, int level, int prio);
+	void DisplayLameCounter( int sock, PCSTR url );
+	void DisplayMaxRPM(int sock, PCSTR url);
+	void DisplayMinRPM(int sock, PCSTR url);
+	void DisplayRotations(int sock, PCSTR url);
+	void DisplayDirection(int sock, PCSTR url);
+	void writeImage(BYTE error, char * buffer);
 }
 
 extern void RegisterPost();
@@ -120,6 +123,7 @@ void DisplayMaxRPM(int sock, PCSTR url)
 		snprintf(buffer, MAX_COUNTER_BUFFER_LENGTH,
 				"<input type='text' name='MAX_RPM' value='%d' />",
 				myData.GetMaxRPM());
+		writeImage(myData.GetErrorMaxRPM(), buffer);
 		writestring(sock, (const char *) buffer);
 	}
 }
@@ -133,6 +137,7 @@ void DisplayMinRPM(int sock, PCSTR url)
 		snprintf(buffer, MAX_COUNTER_BUFFER_LENGTH,
 				"<input type='text' name='MIN_RPM' value='%d' />",
 				myData.GetMinRPM());
+		writeImage(myData.GetErrorMinRPM(), buffer);
 		writestring(sock, (const char *) buffer);
 	}
 }
@@ -146,6 +151,7 @@ void DisplayRotations(int sock, PCSTR url)
 		snprintf(buffer, MAX_COUNTER_BUFFER_LENGTH,
 				"<input type='text' name='ROTATIONS' value='%d' />",
 				myData.GetRotations());
+		writeImage(myData.GetErrorRotations(), buffer);
 		writestring(sock, (const char *) buffer);
 	}
 }
@@ -166,4 +172,38 @@ void DisplayDirection(int sock, PCSTR url)
 				"%s</SELECT>", buffer);
 		writestring(sock, (const char *) buffer);
 	}
+}
+
+char * strtrim(char *str)
+{
+	char *end;
+
+	// Trim leading space
+	while(*str == '+') str++;
+
+	if(*str == 0)  // All spaces?
+		return str;
+
+	// Trim trailing space
+	end = str + strlen(str) - 1;
+	while(end > str && *end == '+') end--;
+
+	// Write new null terminator
+	*(end+1) = 0;
+
+	return str;
+}
+
+void writeImage(BYTE error, char * buffer) {
+	if(error == FORM_ERROR) {
+		snprintf(buffer, MAX_COUNTER_BUFFER_LENGTH,
+				"%s <img src='http://i.imgur.com/crRhbqn.gif' height='150' />", buffer);
+	}
+	else if(error == FORM_OK){
+		snprintf(buffer, MAX_COUNTER_BUFFER_LENGTH,
+				"%s <img src='http://i.imgur.com/Y7Fxh6s.gif' height='150' />", buffer);
+
+	}
+
+	return;
 }

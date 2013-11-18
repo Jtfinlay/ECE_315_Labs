@@ -121,6 +121,7 @@
 #include <eTPU.h>
 #include <ETPUInit.h>
 #include <eTPU_sm.h>
+#include <string.h>
 
 extern "C"
 {
@@ -149,9 +150,49 @@ int MyDoPost( int sock, char *url, char *pData, char *rxBuffer )
 {
 	// Insert your post request handling here
 
+	char* data;
+	char* key;
+	char* value;
+
+	char* saveData;
+	char* saveKey;
+
+
+	data = strtok_r(pData, "&", &saveData);
+	do {
+		key = strtok_r(data, "=", &saveKey);
+		value = strtok_r(NULL, "=", &saveKey);
+
+		key = strtrim(key);
+		value = strtrim(value);
+		if(strcmp("MAX_RPM", key) == 0)
+			myData.SetErrorMaxRPM(myData.SetMaxRPM(value));
+		else if(strcmp("MIN_RPM", key) == 0)
+			myData.SetErrorMinRPM(myData.SetMinRPM(value));
+		else if(strcmp("ROTATIONS", key) == 0)
+			myData.SetErrorRotations(myData.SetRotations(value));
+		else if(strcmp("DIRECTION", key) == 0)
+			myData.SetDirection(value);
+
+		iprintf("%s, %s\n", key, value);
+
+
+	} while((data = strtok_r(NULL, "&",&saveData)) != NULL);
    // We have to respond to the post with a new HTML page...
    // In this case we will redirect so the browser will
    //go to that URL for the response...
+
+	if(myData.GetMaxRPM() < myData.GetMinRPM()) {
+		myData.SetErrorMaxRPM(FORM_ERROR);
+		myData.SetErrorMinRPM(FORM_ERROR);
+	}
+
+
+	iprintf("MAX_RPM: %i\n", myData.GetMaxRPM());
+	iprintf("MIN_RPM: %i\n", myData.GetMinRPM());
+	iprintf("ROTATIONS: %i\n", myData.GetRotations());
+	iprintf("DIRECTION: %i\n", myData.GetDirection());
+
    RedirectResponse( sock, "INDEX.HTM" );
 
    return 0;
