@@ -13,8 +13,6 @@
 #include <ctype.h>
 #include "motorconstants.h"
 
-extern OS_SEM form_sem;
-
 /* Name: FormData Constructor
  * Description: Empty Constructor for the class
  * Inputs: 	none
@@ -41,36 +39,24 @@ FormData::~FormData() {
  */
 BYTE FormData::SetMaxRPM(char * rpm) {
 
-	if (OSSemPend(&form_sem, 0) == OS_TIMEOUT)
-		iprintf("Timeout waiting for Semaphore\n");
-
 	long iRPM = strtol(rpm,NULL,10);
 	if (iRPM <= SM_MAX_RPM_PHYSICAL &&
 			iRPM >= SM_MIN_RPM_PHYSICAL) {
 		int_maxrpm = iRPM;
-		if (OSSemPost(&form_sem) == OS_SEM_OVF)
-			iprintf("Error posting to Semaphore\n");
-		return FORM_OK;
+
+	return FORM_OK;
 	}
-	if (OSSemPost(&form_sem) == OS_SEM_OVF)
-		iprintf("Error posting to Semaphore\n");
+
 	return FORM_ERROR;
 }
 
 BYTE FormData::SetMaxRPM(int iRPM) {
-
-	if (OSSemPend(&form_sem, 0) == OS_TIMEOUT)
-		iprintf("Timeout waiting for Semaphore\n");
-
 	if (iRPM <= SM_MAX_RPM_PHYSICAL &&
-			iRPM >= SM_MIN_RPM_PHYSICAL) {
-		int_maxrpm = iRPM;
-		if (OSSemPost(&form_sem) == OS_SEM_OVF)
-			iprintf("Error posting to Semaphore\n");
+				iRPM >= SM_MIN_RPM_PHYSICAL) {
+			int_maxrpm = iRPM;
+
 		return FORM_OK;
 	}
-	if (OSSemPost(&form_sem) == OS_SEM_OVF)
-		iprintf("Error posting to Semaphore\n");
 	return FORM_ERROR;
 }
 /* Name:
@@ -89,37 +75,26 @@ int  FormData::GetMaxRPM(void){
  */
 BYTE FormData::SetMinRPM(char * rpm) {
 
-	if (OSSemPend(&form_sem, 0) == OS_TIMEOUT)
-		iprintf("Timeout waiting for Semaphore\n");
-
 	long iRPM = strtol(rpm,NULL,10);
 	if (iRPM <= SM_MAX_RPM_PHYSICAL &&
 			iRPM >= SM_MIN_RPM_PHYSICAL) {
 		int_minrpm = iRPM;
-		if (OSSemPost(&form_sem) == OS_SEM_OVF)
-			iprintf("Error posting to Semaphore\n");
 
-		return FORM_OK;
+
+	return FORM_OK;
 	}
-	if (OSSemPost(&form_sem) == OS_SEM_OVF)
-		iprintf("Error posting to Semaphore\n");
+
 	return FORM_ERROR;
 }
 
 BYTE FormData::SetMinRPM(int iRPM) {
-	if (OSSemPend(&form_sem, 0) == OS_TIMEOUT)
-		iprintf("Timeout waiting for Semaphore\n");
-
 	if (iRPM <= SM_MAX_RPM_PHYSICAL &&
-			iRPM >= SM_MIN_RPM_PHYSICAL) {
-		int_minrpm = iRPM;
-		if (OSSemPost(&form_sem) == OS_SEM_OVF)
-			iprintf("Error posting to Semaphore\n");
+				iRPM >= SM_MIN_RPM_PHYSICAL) {
+			int_minrpm = iRPM;
+
 
 		return FORM_OK;
 	}
-	if (OSSemPost(&form_sem) == OS_SEM_OVF)
-		iprintf("Error posting to Semaphore\n");
 	return FORM_ERROR;
 }
 
@@ -138,34 +113,19 @@ int  FormData::GetMinRPM(void) {
  * Outputs:
  */
 BYTE FormData::SetSteps(char * steps) {
-	if (OSSemPend(&form_sem, 0) == OS_TIMEOUT)
-		iprintf("Timeout waiting for Semaphore\n");
-
 	long iSteps = strtol(steps,NULL,10);
-	if(iSteps < 0 || iSteps > INT_MAX) {
-		if (OSSemPost(&form_sem) == OS_SEM_OVF)
-			iprintf("Error posting to Semaphore\n");
+	if(iSteps < 0 || iSteps > INT_MAX)
 		return FORM_ERROR;
-	}this->int_steps = iSteps;
-	if (OSSemPost(&form_sem) == OS_SEM_OVF)
-		iprintf("Error posting to Semaphore\n");
+	this->int_steps = iSteps;
 	return FORM_OK;
 
 }
 
 BYTE FormData::SetRotations(char * rot) {
-	if (OSSemPend(&form_sem, 0) == OS_TIMEOUT)
-		iprintf("Timeout waiting for Semaphore\n");
-
 	long iRot = strtol(rot, NULL, 10);
-	if(iRot <= 1 || iRot >= MAX_ROTATIONS) {
-		if (OSSemPost(&form_sem) == OS_SEM_OVF)
-			iprintf("Error posting to Semaphore\n");
+	if(iRot <= 1 || iRot >= MAX_ROTATIONS)
 		return FORM_ERROR;
-	}
 	this->int_rotations = iRot;
-	if (OSSemPost(&form_sem) == OS_SEM_OVF)
-		iprintf("Error posting to Semaphore\n");
 	return FORM_OK;
 }
 
@@ -184,43 +144,22 @@ int FormData::GetSteps (void) {
  * Outputs:
  */
 BYTE FormData::SetDirection(char * dir){
-	if (OSSemPend(&form_sem, 0) == OS_TIMEOUT)
-		iprintf("Timeout waiting for Semaphore\n");
-
 	if(strcmp("CW", dir)) {
 		this->direction = CW;
-
-		if (OSSemPost(&form_sem) == OS_SEM_OVF)
-			iprintf("Error posting to Semaphore\n");
-
 		return FORM_OK;
 	}
 	else if(strcmp("CCW", dir)) {
 		this->direction = CCW;
-
-		if (OSSemPost(&form_sem) == OS_SEM_OVF)
-			iprintf("Error posting to Semaphore\n");
-
 		return FORM_OK;
 	}
 	else if(strcmp("STOP", dir)) {
 		this->direction = STOP;
-
-		if (OSSemPost(&form_sem) == OS_SEM_OVF)
-			iprintf("Error posting to Semaphore\n");
-
 		return FORM_OK;
 	}
 	else if(strcmp("UNSET", dir)) {
 		this->direction = UNSET;
-
-		if (OSSemPost(&form_sem) == OS_SEM_OVF)
-			iprintf("Error posting to Semaphore\n");
-
 		return FORM_OK;
 	}
-	if (OSSemPost(&form_sem) == OS_SEM_OVF)
-		iprintf("Error posting to Semaphore\n");
 	return FORM_ERROR;
 }
 

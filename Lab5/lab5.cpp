@@ -32,23 +32,22 @@
 #include <taskmon.h>
 #include <dhcpclient.h>
 #include <string.h>
-#include "FormData.h"
+#include "stepper.h"
+#include "keypad.h"
 #include <eTPU.h>
 #include <ETPUInit.h>
 #include <eTPU_sm.h>
 #include <sim5234.h>
 #include <cfinter.h>
+#include "lcd.h"
 #include "motorconstants.h"
-#include <stdlib.h>
+#include "formdata.h"
 
-const char *AppName = "James and Andrew";
-
+const char *AppName = "James & Andrew solving crimes";
 
 extern "C"
 {
 	void UserMain( void *pd );
-	void IRQIntInit(void);
-	void SetIntc(int intc, long func, int vector, int level, int prio);
 	void DisplayLameCounter( int sock, PCSTR url );
 	void DisplayMaxRPM(int sock, PCSTR url);
 	void DisplayMinRPM(int sock, PCSTR url);
@@ -59,17 +58,31 @@ extern "C"
 
 extern void RegisterPost();
 
+FormData myData;
+OS_SEM form_sem;
+Keypad myKeypad;
+Lcd myLCD;
+Stepper myStepper(SM_MASTER_CHANNEL, SM_ACCEL_TABLE_SIZE);
+
 #define MAX_COUNTER_BUFFER_LENGTH 200
 
 
-FormData myData;
-OS_SEM form_sem;
-
 void UserMain( void *pd )
 {
+	BYTE err = OS_NO_ERR;
 	InitializeStack();
 	OSChangePrio( MAIN_PRIO );
 	EnableAutoUpdate();
+
+	eTPUInit();
+
+	myLCD.Init(LCD_BOTH_SCR);
+	myKeypad.Init();
+
+	/* Initialise your formdata and stepper class here based on the output
+	 * from the DIP switches.
+	 */
+
 	StartHTTP();
 	EnableTaskMonitor();
 
@@ -79,17 +92,19 @@ void UserMain( void *pd )
 
 	if (OSSemInit(&form_sem,1) == OS_SEM_ERR)
 		iprintf("Error in initializing semaphore.\n");
+	myStepper.Init(ECE315_ETPU_SM_FULL_STEP_MODE,
+			SM_MAX_PERIOD,
+			SM_MIN_PERIOD);
 
-	// Insert your code that queries the DIP switches and
-	// initialises the motor mode accordingly here.
-	if (getdipsw() == 0xFF)
-		myData.Init(ECE315_ETPU_SM_HALF_STEP_MODE);
-	else
-		myData.Init(ECE315_ETPU_SM_FULL_STEP_MODE);
-
+	myLCD.Clear(LCD_BOTH_SCR);
+	// Display welcome message
+	myLCD.PrintString(LCD_UPPER_SCR, "Welcome to Lab 5- ECE315");
+	OSTimeDly(TICKS_PER_SECOND*1);
 
 	while ( 1 )
 	{
+
+
 		OSTimeDly(TICKS_PER_SECOND*100);
 	}
 }
@@ -109,8 +124,7 @@ void DisplayLameCounter( int sock, PCSTR url )
 
 	if((sock > 0) && (url != NULL)) {
 		iprintf(url);
-		snprintf(buffer,MAX_COUNTER_BUFFER_LENGTH,
-				"<H1>The page has been reloaded %d times. </H1>", form_counter );
+		snprintf(buffer,MAX_COUNTER_BUFFER_LENGTH, "<H1>The page has been reloaded %d times. </H1>", form_counter );
 		form_counter++;
 		writestring(sock,(const char *) buffer);
 
@@ -120,7 +134,7 @@ void DisplayLameCounter( int sock, PCSTR url )
 void DisplayMaxRPM(int sock, PCSTR url)
 {
 	if (OSSemPend(&form_sem, 0) == OS_TIMEOUT)
-			iprintf("Timeout waiting for Semaphore\n");
+		iprintf("Timeout waiting for Semaphore\n");
 	char buffer[MAX_COUNTER_BUFFER_LENGTH+1];
 
 	if ((sock > 0) && (url != NULL)) {
@@ -132,13 +146,13 @@ void DisplayMaxRPM(int sock, PCSTR url)
 		writestring(sock, (const char *) buffer);
 	}
 	if (OSSemPost(&form_sem) == OS_SEM_OVF)
-			iprintf("Error posting to Semaphore\n");
+		iprintf("Error posting to Semaphore\n");
 }
 
 void DisplayMinRPM(int sock, PCSTR url)
 {
 	if (OSSemPend(&form_sem, 0) == OS_TIMEOUT)
-			iprintf("Timeout waiting for Semaphore\n");
+		iprintf("Timeout waiting for Semaphore\n");
 	char buffer[MAX_COUNTER_BUFFER_LENGTH+1];
 
 	if ((sock > 0) && (url != NULL)) {
@@ -150,13 +164,13 @@ void DisplayMinRPM(int sock, PCSTR url)
 		writestring(sock, (const char *) buffer);
 	}
 	if (OSSemPost(&form_sem) == OS_SEM_OVF)
-			iprintf("Error posting to Semaphore\n");
+		iprintf("Error posting to Semaphore\n");
 }
 
 void DisplayRotations(int sock, PCSTR url)
 {
 	if (OSSemPend(&form_sem, 0) == OS_TIMEOUT)
-			iprintf("Timeout waiting for Semaphore\n");
+		iprintf("Timeout waiting for Semaphore\n");
 	char buffer[MAX_COUNTER_BUFFER_LENGTH+1];
 
 	if ((sock > 0) && (url != NULL)) {
@@ -168,13 +182,13 @@ void DisplayRotations(int sock, PCSTR url)
 		writestring(sock, (const char *) buffer);
 	}
 	if (OSSemPost(&form_sem) == OS_SEM_OVF)
-			iprintf("Error posting to Semaphore\n");
+		iprintf("Error posting to Semaphore\n");
 }
 
 void DisplayDirection(int sock, PCSTR url)
 {
 	if (OSSemPend(&form_sem, 0) == OS_TIMEOUT)
-			iprintf("Timeout waiting for Semaphore\n");
+		iprintf("Timeout waiting for Semaphore\n");
 	char buffer[MAX_COUNTER_BUFFER_LENGTH+1];
 
 	if ((sock > 0) && (url != NULL)) {
@@ -190,8 +204,9 @@ void DisplayDirection(int sock, PCSTR url)
 		writestring(sock, (const char *) buffer);
 	}
 	if (OSSemPost(&form_sem) == OS_SEM_OVF)
-			iprintf("Error posting to Semaphore\n");
+		iprintf("Error posting to Semaphore\n");
 }
+
 
 char * strtrim(char *str)
 {
@@ -226,3 +241,5 @@ void writeImage(BYTE error, char * buffer) {
 
 	return;
 }
+
+

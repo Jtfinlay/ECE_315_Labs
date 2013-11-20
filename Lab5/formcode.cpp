@@ -117,6 +117,7 @@
  *---------------------------------------------------------------------------------*/
 
 #include "formdata.h"
+#include "stepper.h"
 
 #include <eTPU.h>
 #include <ETPUInit.h>
@@ -126,7 +127,7 @@
 extern "C"
 {
 }
-
+extern Stepper myStepper;
 extern FormData myData;
 extern OS_SEM form_sem;
 
@@ -193,11 +194,13 @@ int MyDoPost( int sock, char *url, char *pData, char *rxBuffer )
 	iprintf("ROTATIONS: %i\n", myData.GetRotations());
 	iprintf("DIRECTION: %i\n", myData.GetDirection());
 
+	// Perform step
+	myStepper.Step(100);
+
    RedirectResponse( sock, "INDEX.HTM" );
 
    return 0;
 }
-
 
 /* Name: RegisterPost
  * Description: The default Post Request handler is empty. We need to insert
