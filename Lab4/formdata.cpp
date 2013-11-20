@@ -3,6 +3,9 @@
  *
  *  Created on: Oct 29, 2009
  *      Author: Nancy Minderman
+ * 
+ *  Modified on: Nov 19, 2013
+ *      Author: James Finlay, Andrew Fontaine
  */
 
 #include "formdata.h"
@@ -36,10 +39,10 @@ FormData::~FormData() {
 	// TODO Auto-generated destructor stub
 }
 
-/* Name:
- * Description:
- * Inputs:
- * Outputs:
+/* Name: Set Maximum RPM
+ * Description: Set the maximum rpm of the motor
+ * Inputs: RPM as string
+ * Outputs: OK or ERROR
  */
 BYTE FormData::SetMaxRPM(char * rpm) {
 
@@ -54,7 +57,11 @@ BYTE FormData::SetMaxRPM(char * rpm) {
 	this->post();
 	return FORM_ERROR;
 }
-
+/* Name: Set Maximum RPM
+ * Description: Set the maximum rpm of the motor
+ * Inputs: RPM as integer
+ * Outputs: OK or ERROR
+ */
 BYTE FormData::SetMaxRPM(int iRPM) {
 
 	this->pend();
@@ -67,19 +74,19 @@ BYTE FormData::SetMaxRPM(int iRPM) {
 	this->post();
 	return FORM_ERROR;
 }
-/* Name:
- * Description:
+/* Name: Get Maximum RPM
+ * Description: Get the maximum rpm of the motor
  * Inputs:
- * Outputs:
+ * Outputs: The Maximum RPM
  */
 int  FormData::GetMaxRPM(void){
 	return int_maxrpm;
 }
 
-/* Name:
- * Description:
- * Inputs:
- * Outputs:
+/* Name: Set Minimum RPM
+ * Description: Set the minimum rpm of the motor
+ * Inputs: RPM as string
+ * Outputs: OK or ERROR
  */
 BYTE FormData::SetMinRPM(char * rpm) {
 
@@ -95,7 +102,11 @@ BYTE FormData::SetMinRPM(char * rpm) {
 	this->post();
 	return FORM_ERROR;
 }
-
+/* Name: Set Minimum RPM
+ * Description: Set the minimum rpm of the motor
+ * Inputs: RPM as integer
+ * Outputs: OK or ERROR
+ */
 BYTE FormData::SetMinRPM(int iRPM) {
 	this->pend();
 	if (iRPM <= SM_MAX_RPM_PHYSICAL &&
@@ -109,19 +120,19 @@ BYTE FormData::SetMinRPM(int iRPM) {
 	return FORM_ERROR;
 }
 
-/* Name:
- * Description:
- * Inputs:
- * Outputs:
+/* Name: Get Minimum RPM
+ * Description: Get the minimum rpm of the motor
+ * Inputs: 
+ * Outputs: Minimum RPM as integer
  */
 int  FormData::GetMinRPM(void) {
 	return int_minrpm;
 }
 
-/* Name:
- * Description:
- * Inputs:
- * Outputs:
+/* Name: Set Steps
+ * Description: Set the step-size of the motor
+ * Inputs: Steps as string
+ * Outputs: OK or ERROR
  */
 BYTE FormData::SetSteps(char * steps) {
 	this->pend();
@@ -134,7 +145,11 @@ BYTE FormData::SetSteps(char * steps) {
 	return FORM_OK;
 
 }
-
+/* Name: Set Rotations
+ * Description: Set the rotations of the motor
+ * Inputs: Rotations as string
+ * Outputs: OK or ERROR
+ */
 BYTE FormData::SetRotations(char * rot) {
 	this->pend();
 	long iRot = strtol(rot, NULL, 10);
@@ -147,19 +162,19 @@ BYTE FormData::SetRotations(char * rot) {
 	return FORM_OK;
 }
 
-/* Name:
- * Description:
- * Inputs:
- * Outputs:
+/* Name: Get Steps size
+ * Description: Get the size of the step
+ * Inputs: 
+ * Outputs: Steps as integer
  */
 int FormData::GetSteps (void) {
 	return int_steps;
 }
 
-/* Name:
- * Description:
- * Inputs:
- * Outputs:
+/* Name: Set Direction
+ * Description: Set the direction of rotation
+ * Inputs: Direction as string
+ * Outputs: OK or ERROR
  */
 BYTE FormData::SetDirection(char * dir){
 	this->pend();
@@ -195,55 +210,83 @@ BYTE FormData::SetDirection(char * dir){
 	return FORM_ERROR;
 }
 
+/* Name: Get Rotations
+ * Description: Get the rotations of the motor
+ * Inputs:
+ * Outputs: Rotations as integer
+ */
 int FormData::GetRotations(void) {
 	return int_rotations;
 }
-/* Name:
- * Description:
+/* Name: Get Direction
+ * Description: Get the direction of rotation
  * Inputs:
- * Outputs:
+ * Outputs: Direction as BYTE
  */
 BYTE FormData::GetDirection(void){
 	return direction;
 }
-
-/* Name:
- * Description:
+/* Name: Get Mode
+ * Description: Get the mode 
  * Inputs:
- * Outputs:
+ * Outputs: Mode as a byte
  */
 BYTE FormData::GetMode(void){
 	return mode;
 }
-
+/* Name: Get Error max RPM
+ * Description: Get whether max rpm has errored
+ * Inputs:
+ * Outputs: Error as byte
+ */
 BYTE FormData::GetErrorMaxRPM() {
 	return error_maxrpm;
 }
-
+/* Name: Set Error max RPM
+ * Description: Set whether max rpm has errored
+ * Inputs: Error as byte
+ * Outputs:
+ */
 void FormData::SetErrorMaxRPM(BYTE error) {
 	error_maxrpm = error;
 }
-
+/* Name: Get Error min RPM
+ * Description: Get whether min rpm has errored
+ * Inputs:
+ * Outputs: Error as byte
+ */
 BYTE FormData::GetErrorMinRPM() {
 	return error_minrpm;
 }
-
+/* Name: Set Error min RPM
+ * Description: set whether max rpm has errored
+ * Inputs: Error as byte
+ * Outputs:
+ */
 void FormData::SetErrorMinRPM(BYTE error) {
 	error_minrpm = error;
 }
-
+/* Name: Get Error Rotations
+ * Description: Get whether rotations has errored
+ * Inputs:
+ * Outputs: Error as byte
+ */
 BYTE FormData::GetErrorRotations() {
 	return error_rotations;
 }
-
+/* Name: Set Error max RPM
+ * Description: Set whether rotations has errored
+ * Inputs:  Error as byte
+ * Outputs:
+ */
 void FormData::SetErrorRotations(BYTE error) {
 	error_rotations = error;
 }
 
-/* Name:
- * Description:
- * Inputs:
- * Outputs:
+/* Name: FormData initialization
+ * Description: initializes FormData to appropriate values
+ * Inputs: The mode of the motor as BYTE
+ * Outputs: FORM_OK
  */
 BYTE FormData::Init(BYTE motor_mode){
 	direction = UNSET;
@@ -256,13 +299,21 @@ BYTE FormData::Init(BYTE motor_mode){
 	error_rotations = FORM_NO_DATA;
 	return FORM_OK;
 }
-
+/* Name: Pend
+ * Description: Sets binary semaphore to pend
+ * Inputs:
+ * Outputs:
+ */
 void FormData::pend() {
 
 	if (OSSemPend(&form_sem, 0) == OS_TIMEOUT)
 			iprintf("Timeout waiting for Semaphore\n");
 }
-
+/* Name: Post
+ * Description: Sets binary semaphore to post
+ * Inputs:
+ * Outputs:
+ */
 void FormData::post() {
 
 	if (OSSemPost(&form_sem) == OS_SEM_OVF)
