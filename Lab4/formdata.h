@@ -15,6 +15,8 @@
 #define FORM_ERROR 		0xFE
 #define FORM_OK			0
 
+#define BASE_10	10
+
 enum dir { 	UNSET = 0,
 		CW = 1,
 		CCW = 2,

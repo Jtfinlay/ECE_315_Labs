@@ -25,8 +25,6 @@
 FormData::FormData() {
 	// TODO Auto-generated constructor stub
 
-	if (OSSemInit(&form_sem,1) == OS_SEM_ERR)
-		iprintf("Error in initializing semaphore.\n");
 
 }
 
@@ -47,7 +45,7 @@ FormData::~FormData() {
 BYTE FormData::SetMaxRPM(char * rpm) {
 
 	this->pend();
-	long iRPM = strtol(rpm,NULL,10);
+	long iRPM = strtol(rpm,NULL,BASE_10);
 	if (iRPM <= SM_MAX_RPM_PHYSICAL &&
 			iRPM >= SM_MIN_RPM_PHYSICAL) {
 		int_maxrpm = iRPM;
@@ -136,7 +134,7 @@ int  FormData::GetMinRPM(void) {
  */
 BYTE FormData::SetSteps(char * steps) {
 	this->pend();
-	long iSteps = strtol(steps,NULL,10);
+	long iSteps = strtol(steps,NULL,BASE_10);
 	if(iSteps < 0 || iSteps > INT_MAX) {
 		this->post();
 		return FORM_ERROR;
@@ -152,7 +150,7 @@ BYTE FormData::SetSteps(char * steps) {
  */
 BYTE FormData::SetRotations(char * rot) {
 	this->pend();
-	long iRot = strtol(rot, NULL, 10);
+	long iRot = strtol(rot, NULL, BASE_10);
 	if(iRot <= 1 || iRot >= MAX_ROTATIONS) {
 		this->post();
 		return FORM_ERROR;
@@ -297,6 +295,8 @@ BYTE FormData::Init(BYTE motor_mode){
 	error_maxrpm = FORM_NO_DATA;
 	error_minrpm = FORM_NO_DATA;
 	error_rotations = FORM_NO_DATA;
+	if (OSSemInit(&form_sem,1) == OS_SEM_ERR)
+		iprintf("Error in initializing semaphore.\n");
 	return FORM_OK;
 }
 /* Name: Pend
