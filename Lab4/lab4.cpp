@@ -60,6 +60,7 @@ extern "C"
 extern void RegisterPost();
 
 #define MAX_COUNTER_BUFFER_LENGTH 200
+#define DIP_ON 0xFF
 
 
 FormData myData;
@@ -78,7 +79,7 @@ void UserMain( void *pd )
 
 	// Insert your code that queries the DIP switches and
 	// initialises the motor mode accordingly here.
-	if (getdipsw() == 0xFF)
+	if (getdipsw() == DIP_ON)
 		myData.Init(ECE315_ETPU_SM_HALF_STEP_MODE);
 	else
 		myData.Init(ECE315_ETPU_SM_FULL_STEP_MODE);
@@ -186,6 +187,11 @@ void DisplayDirection(int sock, PCSTR url)
 	myData.post();
 }
 
+/*
+ * Trims leading and trailing '+' from string.
+ *
+ * Adapted from http://stackoverflow.com/a/122721/2152672
+ */
 char * strtrim(char *str)
 {
 	char *end;
