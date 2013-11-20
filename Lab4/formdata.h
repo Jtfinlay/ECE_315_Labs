@@ -48,6 +48,8 @@ public:
 	BYTE GetErrorRotations();
 	void SetErrorRotations(BYTE error);
 	BYTE Init(BYTE motor_mode);
+	void pend();
+	void post();
 private:
 	int  int_maxrpm;
 	int  int_minrpm;
@@ -58,6 +60,7 @@ private:
 	BYTE error_maxrpm;
 	BYTE error_minrpm;
 	BYTE error_rotations;
+	OS_SEM form_sem;
 };
 
 #endif /* FORMDATA_H_ */
