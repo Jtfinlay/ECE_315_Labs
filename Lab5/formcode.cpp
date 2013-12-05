@@ -24,6 +24,7 @@
  *
  *****************************************************************************/
 #include "predef.h"
+#include "motorconstants.h"
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -126,10 +127,13 @@
 
 extern "C"
 {
+	char * strtrim(char *str);
 }
-extern Stepper myStepper;
+
 extern FormData myData;
 extern OS_SEM form_sem;
+extern Stepper myStepper;
+extern OS_Q lcdQueue;
 
 /*-------------------------------------------------------------------
  * When you write a MyDoPost() function and register it, it will
@@ -154,9 +158,13 @@ int MyDoPost( int sock, char *url, char *pData, char *rxBuffer )
 	char* data;
 	char* key;
 	char* value;
+	char* error;
 
 	char* saveData;
 	char* saveKey;
+	char* wrongData;
+
+	BYTE run = 0;
 
 
 	data = strtok_r(pData, "&", &saveData);
@@ -164,43 +172,77 @@ int MyDoPost( int sock, char *url, char *pData, char *rxBuffer )
 		key = strtok_r(data, "=", &saveKey);
 		value = strtok_r(NULL, "=", &saveKey);
 
-		key = strtrim(key);
-		value = strtrim(value);
 		if(strcmp("MAX_RPM", key) == 0)
 			myData.SetErrorMaxRPM(myData.SetMaxRPM(value));
 		else if(strcmp("MIN_RPM", key) == 0)
 			myData.SetErrorMinRPM(myData.SetMinRPM(value));
 		else if(strcmp("ROTATIONS", key) == 0)
 			myData.SetErrorRotations(myData.SetRotations(value));
-		else if(strcmp("DIRECTION", key) == 0)
+		else if(strcmp("DIRECTION", key) == 0) {
 			myData.SetDirection(value);
+			iprintf(" %i", myData.GetDirection());
+		}
+		else if(strcmp("ECE315_form", key) == 0)
+			if(strcmp("validate_me", value) == 0)
+				run = 1;
+
 
 		iprintf("%s, %s\n", key, value);
 
 
 	} while((data = strtok_r(NULL, "&",&saveData)) != NULL);
-   // We have to respond to the post with a new HTML page...
-   // In this case we will redirect so the browser will
-   //go to that URL for the response...
+	// We have to respond to the post with a new HTML page...
+	// In this case we will redirect so the browser will
+	//go to that URL for the response...
 
 	if(myData.GetMaxRPM() < myData.GetMinRPM()) {
 		myData.SetErrorMaxRPM(FORM_ERROR);
 		myData.SetErrorMinRPM(FORM_ERROR);
 	}
 
+	if(run == 1 && myData.GetErrorMaxRPM() == FORM_OK
+			&& myData.GetErrorMinRPM() == FORM_OK && myData.GetErrorRotations() == FORM_OK) {
+		int steps;
+		switch(myData.GetMode()) {
+		case ECE315_ETPU_SM_HALF_STEP_MODE:
+			steps = myData.GetRotations() * STEPS_PER_REV_HALF_STEP;
+			break;
+		case ECE315_ETPU_SM_FULL_STEP:
+			steps = myData.GetRotations() * STEPS_PER_REV_FULL_STEP;
+			break;
+		default:
+			steps = 0;
+			break;
+		}
+		myStepper.SetStartPeriodUsingRPM(myData.GetMinRPM());
+		myStepper.SetSlewPeriodUsingRPM(myData.GetMaxRPM());
+		switch(myData.GetDirection()) {
+		case CW:
+			OSQPost(&lcdQueue, (void *) "w");
+			myStepper.Step(steps);
+			break;
+		case CCW:
+			OSQPost(&lcdQueue, (void *)"c");
+			myStepper.Step(steps* -1);
+			break;
+		}
+	}
+	else {
+		OSQPost(&lcdQueue, (void *) "s");
+		myStepper.Stop();
+	}
 
 	iprintf("MAX_RPM: %i\n", myData.GetMaxRPM());
 	iprintf("MIN_RPM: %i\n", myData.GetMinRPM());
 	iprintf("ROTATIONS: %i\n", myData.GetRotations());
 	iprintf("DIRECTION: %i\n", myData.GetDirection());
 
-	// Perform step
-	myStepper.Step(100);
 
-   RedirectResponse( sock, "INDEX.HTM" );
+	RedirectResponse( sock, "INDEX.HTM" );
 
-   return 0;
+	return 0;
 }
+
 
 /* Name: RegisterPost
  * Description: The default Post Request handler is empty. We need to insert
@@ -210,5 +252,5 @@ int MyDoPost( int sock, char *url, char *pData, char *rxBuffer )
  */
 void RegisterPost()
 {
-   SetNewPostHandler( MyDoPost );
+	SetNewPostHandler( MyDoPost );
 }

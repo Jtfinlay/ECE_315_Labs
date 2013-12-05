@@ -15,13 +15,13 @@
 #define FORM_ERROR 		0xFE
 #define FORM_OK			0
 
+#define BASE_10	10
+
 enum dir { 	UNSET = 0,
-		CW = 1,
-		CCW = 2,
+		CCW = 1,
+		CW = 2,
 		STOP = 3
 };
-
-char* strtrim(char * str);
 
 
 class FormData {
@@ -48,6 +48,8 @@ public:
 	BYTE GetErrorRotations();
 	void SetErrorRotations(BYTE error);
 	BYTE Init(BYTE motor_mode);
+	void pend();
+	void post();
 private:
 	int  int_maxrpm;
 	int  int_minrpm;
@@ -58,6 +60,7 @@ private:
 	BYTE error_maxrpm;
 	BYTE error_minrpm;
 	BYTE error_rotations;
+	OS_SEM form_sem;
 };
 
 #endif /* FORMDATA_H_ */

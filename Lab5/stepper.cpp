@@ -79,7 +79,31 @@ void Stepper::Init(int mode, unsigned long start, unsigned long slew)
 		fs_etpu_sm_enable(master_channel, FS_ETPU_PRIORITY_LOW);
 	}
 	/************** Half-Step Mode ***************/
-	else {}
+	else {
+		steps_per_rev = STEPS_PER_REV_HALF_STEP;
+
+		if(fs_etpu_sm_init(
+				master_channel +2,
+				ECE315_ETPU_SM_2PHASE_HALF_STEP_ENA,
+				0,
+				start,
+				slew,
+				my_accel_tbl,
+				table_size) == FS_ETPU_ERROR_MALLOC) iprintf("MALLOC FAIL FULL!!!");
+
+		fs_etpu_sm_enable(master_channel+2,FS_ETPU_PRIORITY_LOW);
+
+		if(fs_etpu_sm_init(
+						master_channel,
+						ECE315_ETPU_SM_2PHASE_HALF_STEP_DRIVE,
+						0,
+						start,
+						slew,
+						my_accel_tbl,
+						table_size) == FS_ETPU_ERROR_MALLOC) iprintf("MALLOC FAIL FULL!!!");
+
+		fs_etpu_sm_enable(master_channel,FS_ETPU_PRIORITY_LOW);
+	}
 	delete 	my_accel_tbl;
 }
 
@@ -96,6 +120,9 @@ void Stepper::NewAccelTable()
 
 	fs_etpu_sm_table(master_channel, my_accel_tbl);
 
+	if(my_output_mode != ECE315_ETPU_SM_FULL_STEP_MODE)
+		fs_etpu_sm_table(master_channel+2, my_accel_tbl);
+
 	delete 	my_accel_tbl;
 }
 
@@ -106,9 +133,11 @@ void Stepper::NewAccelTable()
  */
 void Stepper::Step(int steps)
 {
-	iprintf("Step\n");
 	// Step a certain number of steps
 	fs_etpu_sm_set_dp(master_channel, fs_etpu_sm_get_cp(master_channel) + steps);
+
+	if(my_output_mode != ECE315_ETPU_SM_FULL_STEP_MODE)
+		fs_etpu_sm_set_dp(master_channel+2, fs_etpu_sm_get_cp(master_channel+1) + steps);
 }
 
 /* Name:
@@ -125,6 +154,8 @@ unsigned int Stepper::SetSlewPeriod(unsigned int slew)
 
 	//set slew period, with 24 bits max
 	fs_etpu_sm_set_sp(master_channel, slew);
+	if(my_output_mode != ECE315_ETPU_SM_FULL_STEP_MODE)
+		fs_etpu_sm_set_sp(master_channel+2, slew);
 
 	NewAccelTable();
 
@@ -145,6 +176,8 @@ unsigned int Stepper::SetStartPeriod(unsigned int start)
 
 	//set start period, with 24 bits max
 	fs_etpu_sm_set_st(master_channel, start);
+	if(my_output_mode != ECE315_ETPU_SM_FULL_STEP_MODE)
+		fs_etpu_sm_set_st(master_channel + 2, start);
 
 	NewAccelTable();
 
@@ -271,5 +304,10 @@ void Stepper::Stop(void ) {
 	iprintf("Stop!\n");
 	fs_etpu_sm_disable( master_channel, FS_ETPU_SM_DISABLE_LOW);
 	fs_etpu_sm_enable( master_channel, FS_ETPU_PRIORITY_LOW);
+	if(my_output_mode != ECE315_ETPU_SM_FULL_STEP_MODE) {
+		fs_etpu_sm_disable( master_channel +2, FS_ETPU_SM_DISABLE_LOW);
+		fs_etpu_sm_enable( master_channel +2, FS_ETPU_PRIORITY_LOW);
+	}
+
 }
 

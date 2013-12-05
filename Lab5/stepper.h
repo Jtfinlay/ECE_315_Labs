@@ -29,6 +29,7 @@
 #define STEPS_PER_REV_FULL_STEP	(100)
 #define STEPS_PER_REV_HALF_STEP	(200)
 #define SM_MIN_PERIOD			(1)
+#define SM_INIT_SLEW_PERIOD		(100000)
 #define SM_MAX_PERIOD			(0x007fffff) //23 bits
 #define HIGH 					1
 #define LOW						0

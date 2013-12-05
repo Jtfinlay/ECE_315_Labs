@@ -43,26 +43,40 @@
 #include "motorconstants.h"
 #include "formdata.h"
 
-const char *AppName = "James & Andrew solving crimes";
+#define EPPAR_RISING_EDGE 0x4
+#define EPDDR_INPUT 0xFFF0
+#define EPIER_ENABLE 0x2
+#define EPFR_RESET 0X2
+
+#define DIP_SW_ON 0xFF
+
+const char *AppName = "Andrew!";
 
 extern "C"
 {
 	void UserMain( void *pd );
 	void DisplayLameCounter( int sock, PCSTR url );
+	char * strtrim(char *str);
 	void DisplayMaxRPM(int sock, PCSTR url);
 	void DisplayMinRPM(int sock, PCSTR url);
 	void DisplayRotations(int sock, PCSTR url);
 	void DisplayDirection(int sock, PCSTR url);
 	void writeImage(BYTE error, char * buffer);
+	void DisplayMotorStep(int sock, PCSTR url);
+	void IRQIntInit(void);
+	void SetIntc(int intc, long func, int vector, int level, int prio);
 }
 
 extern void RegisterPost();
 
 FormData myData;
 OS_SEM form_sem;
+OS_Q lcdQueue;
 Keypad myKeypad;
 Lcd myLCD;
 Stepper myStepper(SM_MASTER_CHANNEL, SM_ACCEL_TABLE_SIZE);
+
+void *msg[20];
 
 #define MAX_COUNTER_BUFFER_LENGTH 200
 
@@ -76,12 +90,39 @@ void UserMain( void *pd )
 
 	eTPUInit();
 
+
 	myLCD.Init(LCD_BOTH_SCR);
 	myKeypad.Init();
+	IRQIntInit();
+
+	err = OSQInit(&lcdQueue, msg, 10*sizeof(char)); // Initialize queue
+	if(err != OS_NO_ERR) {
+		iprintf("Error initializing queue");
+	}
+
 
 	/* Initialise your formdata and stepper class here based on the output
 	 * from the DIP switches.
+	 * Sample Call for the initialization of the eTPU in the
+	 * stepper motor class:
+	 * myStepper.Init(ECE315_ETPU_SM_FULL_STEP_MODE,
+					SM_MAX_PERIOD,
+					SM_INIT_SLEW_PERIOD);
 	 */
+
+
+	if(getdipsw() == DIP_SW_ON) {
+		myStepper.Init(ECE315_ETPU_SM_FULL_STEP_MODE,
+				SM_MAX_PERIOD,
+				SM_INIT_SLEW_PERIOD);
+		myData.Init(ECE315_ETPU_SM_FULL_STEP_MODE);
+	}
+	else {
+		myStepper.Init(ECE315_ETPU_SM_HALF_STEP_MODE,
+				SM_MAX_PERIOD,
+				SM_INIT_SLEW_PERIOD);
+		myData.Init(ECE315_ETPU_SM_HALF_STEP_MODE);
+	}
 
 	StartHTTP();
 	EnableTaskMonitor();
@@ -89,23 +130,39 @@ void UserMain( void *pd )
 	//Call a registration function for our Form code
 	// so POST requests are handled properly.
 	RegisterPost();
-
-	if (OSSemInit(&form_sem,1) == OS_SEM_ERR)
-		iprintf("Error in initializing semaphore.\n");
-	myStepper.Init(ECE315_ETPU_SM_FULL_STEP_MODE,
-			SM_MAX_PERIOD,
-			SM_MIN_PERIOD);
-
+	iprintf("%s\n", AppName);
 	myLCD.Clear(LCD_BOTH_SCR);
 	// Display welcome message
 	myLCD.PrintString(LCD_UPPER_SCR, "Welcome to Lab 5- ECE315");
 	OSTimeDly(TICKS_PER_SECOND*1);
 
-	while ( 1 )
+	char* msg;
+
+	while ( (msg = (char *) OSQPend(&lcdQueue, 0, &err)) != NULL )
 	{
-
-
-		OSTimeDly(TICKS_PER_SECOND*100);
+		switch(*msg) {
+		case '*':
+			myStepper.Stop();
+			myLCD.Clear(LCD_LOWER_SCR);
+			myLCD.Home(LCD_LOWER_SCR);
+			myLCD.PrintString(LCD_LOWER_SCR, "Emergency Stop Requested");
+			break;
+		case 'w':
+			myLCD.Clear(LCD_LOWER_SCR);
+			myLCD.Home(LCD_LOWER_SCR);
+			myLCD.PrintString(LCD_LOWER_SCR, "CW Motor Movement Requested");
+			break;
+		case 'c':
+			myLCD.Clear(LCD_LOWER_SCR);
+			myLCD.Home(LCD_LOWER_SCR);
+			myLCD.PrintString(LCD_LOWER_SCR, "CCW Motor Movement Requested");
+			break;
+		case 's':
+			myLCD.Clear(LCD_LOWER_SCR);
+			myLCD.Home(LCD_LOWER_SCR);
+			myLCD.PrintString(LCD_LOWER_SCR, "Regular Stop Requested");
+			break;
+		}
 	}
 }
 
@@ -131,12 +188,33 @@ void DisplayLameCounter( int sock, PCSTR url )
 	}
 }
 
+void DisplayMotorStep(int sock, PCSTR url) {
+	myData.pend();
+
+	char buffer[MAX_COUNTER_BUFFER_LENGTH+1];
+	if ((sock > 0) && (url != NULL)) {
+
+		switch(myData.GetMode()) {
+		case ECE315_ETPU_SM_HALF_STEP_MODE:
+			snprintf(buffer, MAX_COUNTER_BUFFER_LENGTH, "ECE 315 Half Step Motor Controller");
+			break;
+		case ECE315_ETPU_SM_FULL_STEP_MODE:
+			snprintf(buffer, MAX_COUNTER_BUFFER_LENGTH, "ECE 315 Full Step Motor Controller");
+			break;
+		}
+
+		iprintf("%s\n", buffer);
+		writestring(sock, (const char *) buffer);
+	}
+	myData.post();
+}
+
 void DisplayMaxRPM(int sock, PCSTR url)
 {
-	if (OSSemPend(&form_sem, 0) == OS_TIMEOUT)
-		iprintf("Timeout waiting for Semaphore\n");
-	char buffer[MAX_COUNTER_BUFFER_LENGTH+1];
 
+	myData.pend();
+
+	char buffer[MAX_COUNTER_BUFFER_LENGTH+1];
 	if ((sock > 0) && (url != NULL)) {
 		iprintf("DisplayMaxRPM: %s\n",url);
 		snprintf(buffer, MAX_COUNTER_BUFFER_LENGTH,
@@ -145,14 +223,13 @@ void DisplayMaxRPM(int sock, PCSTR url)
 		writeImage(myData.GetErrorMaxRPM(), buffer);
 		writestring(sock, (const char *) buffer);
 	}
-	if (OSSemPost(&form_sem) == OS_SEM_OVF)
-		iprintf("Error posting to Semaphore\n");
+	myData.post();
 }
 
 void DisplayMinRPM(int sock, PCSTR url)
 {
-	if (OSSemPend(&form_sem, 0) == OS_TIMEOUT)
-		iprintf("Timeout waiting for Semaphore\n");
+	myData.pend();
+
 	char buffer[MAX_COUNTER_BUFFER_LENGTH+1];
 
 	if ((sock > 0) && (url != NULL)) {
@@ -163,14 +240,14 @@ void DisplayMinRPM(int sock, PCSTR url)
 		writeImage(myData.GetErrorMinRPM(), buffer);
 		writestring(sock, (const char *) buffer);
 	}
-	if (OSSemPost(&form_sem) == OS_SEM_OVF)
-		iprintf("Error posting to Semaphore\n");
+
+	myData.post();
 }
 
 void DisplayRotations(int sock, PCSTR url)
 {
-	if (OSSemPend(&form_sem, 0) == OS_TIMEOUT)
-		iprintf("Timeout waiting for Semaphore\n");
+	myData.pend();
+
 	char buffer[MAX_COUNTER_BUFFER_LENGTH+1];
 
 	if ((sock > 0) && (url != NULL)) {
@@ -181,20 +258,19 @@ void DisplayRotations(int sock, PCSTR url)
 		writeImage(myData.GetErrorRotations(), buffer);
 		writestring(sock, (const char *) buffer);
 	}
-	if (OSSemPost(&form_sem) == OS_SEM_OVF)
-		iprintf("Error posting to Semaphore\n");
+	myData.post();
 }
 
 void DisplayDirection(int sock, PCSTR url)
 {
-	if (OSSemPend(&form_sem, 0) == OS_TIMEOUT)
-		iprintf("Timeout waiting for Semaphore\n");
+	myData.pend();
+
 	char buffer[MAX_COUNTER_BUFFER_LENGTH+1];
 
 	if ((sock > 0) && (url != NULL)) {
 		iprintf("DisplayMaxRPM: %s\n",url);
 		snprintf(buffer, MAX_COUNTER_BUFFER_LENGTH,
-				"<SELECT NAME='DIRECTION' VALUE='%s'>", "CW");
+				"<SELECT NAME='DIRECTION' VALUE='CCW'>");
 		snprintf(buffer, MAX_COUNTER_BUFFER_LENGTH,
 				"%s<OPTION VALUE='CCW'>Counter Clockwise</OPTION>", buffer);
 		snprintf(buffer, MAX_COUNTER_BUFFER_LENGTH,
@@ -203,11 +279,14 @@ void DisplayDirection(int sock, PCSTR url)
 				"%s</SELECT>", buffer);
 		writestring(sock, (const char *) buffer);
 	}
-	if (OSSemPost(&form_sem) == OS_SEM_OVF)
-		iprintf("Error posting to Semaphore\n");
+	myData.post();
 }
 
-
+/*
+ * Trims leading and trailing '+' from string.
+ *
+ * Adapted from http://stackoverflow.com/a/122721/2152672
+ */
 char * strtrim(char *str)
 {
 	char *end;
@@ -240,6 +319,22 @@ void writeImage(BYTE error, char * buffer) {
 	}
 
 	return;
+}
+
+INTERRUPT(out_irq_pin_isr, 0x2500){
+
+	sim.eport.epfr |= EPFR_RESET;
+
+	OSQPost(&lcdQueue,(void *)myKeypad.GetNewButtonString());
+}
+
+
+void IRQIntInit(void) {
+	sim.eport.eppar |= EPPAR_RISING_EDGE; //b0100
+	sim.eport.epddr &= EPDDR_INPUT; //b0000
+	sim.eport.epier |= EPIER_ENABLE; //b0010
+
+	SetIntc(0, (long) out_irq_pin_isr, 1, 1, 1);
 }
 
 
